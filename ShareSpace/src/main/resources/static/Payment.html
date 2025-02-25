@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Payment - PG Booking</title>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4F46E5;
+            --error-color: #EF4444;
+            --success-color: #10B981;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: #F3F4F6;
+            color: #1F2937;
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+
+        .container {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 28rem;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .logo {
+            width: 3rem;
+            height: 3rem;
+            margin: 0 auto 1rem;
+            background-color: var(--primary-color);
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo svg {
+            width: 1.5rem;
+            height: 1.5rem;
+            color: white;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: #6B7280;
+            font-size: 0.875rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper svg {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 1.25rem;
+            height: 1.25rem;
+            color: #9CA3AF;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.625rem 0.75rem 0.625rem 2.5rem;
+            border: 1px solid #D1D5DB;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            line-height: 1.25rem;
+            color: #1F2937;
+            background-color: white;
+            transition: all 0.15s ease-in-out;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        input.error {
+            border-color: var(--error-color);
+        }
+
+        .error-message {
+            color: var(--error-color);
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+            display: none;
+        }
+
+        input.error + .error-message {
+            display: block;
+        }
+
+        button {
+            width: 100%;
+            padding: 0.625rem 1.25rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.15s ease-in-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        button:hover {
+            background-color: #4338CA;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        button svg {
+            width: 1rem;
+            height: 1rem;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+
+        button.loading svg {
+            display: block;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .secure-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+            color: #6B7280;
+            font-size: 0.75rem;
+        }
+
+        .secure-badge img {
+            height: 1.25rem;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <div class="logo">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+        </div>
+        <h1>Complete Your Payment</h1>
+        <p class="subtitle">Secure payment powered by Razorpay</p>
+    </div>
+
+    <form id="payment-form" onsubmit="return false;">
+        <div class="form-group">
+            <label for="name">Full Name</label>
+            <div class="input-wrapper">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                <input type="text" id="name" name="name" required placeholder="John Doe" />
+                <div class="error-message">Please enter your full name</div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="email">Email Address</label>
+            <div class="input-wrapper">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <input type="email" id="email" name="email" required placeholder="you@example.com" />
+                <div class="error-message">Please enter a valid email address</div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="amount">Amount (INR)</label>
+            <div class="input-wrapper">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 8h6m-5 0a3 3 0 110 6H9l3 3m-3-6h6m6 1a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <input type="number" id="amount" name="amount" required min="1" placeholder="1000" />
+                <div class="error-message">Please enter a valid amount</div>
+            </div>
+        </div>
+
+        <button id="rzp-button1" type="submit">
+            <svg class="animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span>Proceed to Pay</span>
+        </button>
+    </form>
+
+    <div class="secure-badge">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+        <span>Secured by</span>
+        <img src="https://razorpay.com/assets/razorpay-logo.svg" alt="Razorpay" />
+    </div>
+</div>
+
+<script>
+    // Form validation
+    const form = document.getElementById('payment-form');
+    const inputs = form.querySelectorAll('input');
+    const submitButton = document.getElementById('rzp-button1');
+
+    function validateInput(input) {
+        if (input.validity.valid) {
+            input.classList.remove('error');
+            return true;
+        } else {
+            input.classList.add('error');
+            return false;
+        }
+    }
+
+    inputs.forEach(input => {
+        input.addEventListener('input', () => validateInput(input));
+        input.addEventListener('blur', () => validateInput(input));
+    });
+
+    async function createOrder() {
+        if (!form.checkValidity()) {
+            inputs.forEach(validateInput);
+            return null;
+        }
+
+        submitButton.classList.add('loading');
+        submitButton.disabled = true;
+
+        try {
+            const response = await fetch("http://localhost:8090/payments/payrent", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: document.getElementById('name').value,
+                    email: document.getElementById('email').value,
+                    amount: document.getElementById('amount').value
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to create order');
+            }
+
+            const order = await response.json();
+
+
+            localStorage.setItem('currentPaymentDetails', JSON.stringify({
+            orderId: order.orderId,
+            name: order.name,
+            email: order.email
+        }));
+            return order;
+        } catch (error) {
+            console.error('Error creating order:', error);
+            alert('Failed to create order. Please try again.');
+            return null;
+        } finally {
+            submitButton.classList.remove('loading');
+            submitButton.disabled = false;
+        }
+    }
+
+    submitButton.onclick = async function(e) {
+        e.preventDefault();
+
+        const order = await createOrder();
+        console.log("-------Order Created-------");
+        console.log(order);
+        if (!order) return;
+        const paymentDetails = JSON.parse(localStorage.getItem('currentPaymentDetails'));
+        const options = {
+            key: "rzp_test_nxog52ig2XH5qP", // your razorpay key id
+            amount: order.amount,
+            currency: "INR",
+            name: "Sacchin S", // Name of your Razorpay account
+            description: "PG Booking Payment",
+            order_id: order.orderId,
+            receipt: order.username,
+            handler: function (response) {
+
+             const paymentDetails = JSON.parse(localStorage.getItem('currentPaymentDetails'));
+
+            fetch("http://localhost:8090/payments/paymentCallback", {
+
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    paymentId: response.razorpay_payment_id,
+                     orderId: paymentDetails.orderId,
+                     name: paymentDetails.name,
+                     email: paymentDetails.email
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    alert("Payment successful!");
+                    // Redirect or update UI as needed
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("Payment verification failed");
+            });
+        },
+        prefill: {
+            name: order.name,
+            email: order.email
+        },
+        theme: {
+            color: "#4F46E5"
+        }
+    };
+
+    const rzp1 = new Razorpay(options);
+    rzp1.open();
+    e.preventDefault();
+};
+</script>
+</body>
+</html>

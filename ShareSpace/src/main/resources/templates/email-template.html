@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Rent Payment Reminder</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+    <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+        <div style="text-align: center; padding: 20px;">
+            <h1 style="color: #2c3e50; margin: 0;">ShareSpace</h1>
+            <p style="color: #7f8c8d; margin-top: 5px;">Rent Payment Reminder</p>
+        </div>
+
+        <div style="padding: 20px; border-top: 2px solid #eee;">
+            <p style="color: #2c3e50; font-size: 16px;">
+                Dear <span th:text="${username}" style="font-weight: bold;"></span>,
+            </p>
+
+            <p style="color: #2c3e50; line-height: 1.6;">
+                This is a friendly reminder that your rent payment for <span th:text="${currentMonth}" style="font-weight: bold;"></span> is due.
+            </p>
+
+            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0;">
+                <p style="margin: 0; color: #2c3e50;">
+                    <strong>Amount Due:</strong>
+                    <span style="color: #e74c3c; font-size: 18px; font-weight: bold;">
+                        ₹<span th:text="${rentAmount}"></span>
+                    </span>
+                </p>
+                <p style="margin: 10px 0 0 0; color: #2c3e50;">
+                    <strong>Due Date:</strong>
+                    <span th:text="${dueDate}"></span>
+                </p>
+            </div>
+
+            <p style="color: #2c3e50; line-height: 1.6;">
+                Please ensure timely payment to avoid any late fees. If you have already made the payment,
+                please disregard this reminder.
+            </p>
+
+            <div style="margin-top: 30px;">
+                <p style="color: #2c3e50; margin: 0;">Best regards,</p>
+                <p style="color: #2c3e50; margin: 5px 0; font-weight: bold;">ShareSpace</p>
+            </div>
+        </div>
+
+        <div style="text-align: center; padding: 20px; border-top: 2px solid #eee; margin-top: 20px;">
+            <p style="color: #7f8c8d; font-size: 12px; margin: 0;">
+                This is an automated message. Please do not reply to this email.
+            </p>
+            <p style="color: #7f8c8d; font-size: 12px; margin: 5px 0;">
+                If you have any questions, please contact our support team.
+            </p>
+        </div>
+    </div>
+</body>
+</html>
