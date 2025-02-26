@@ -160,4 +160,12 @@ public class RoomServiceImpl implements RoomService {
         }
     }
 
+
+    @Override
+    public String addRooms(Room room) {
+        return "";
+    }
+
+
+
 }

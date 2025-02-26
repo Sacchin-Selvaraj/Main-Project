@@ -98,7 +98,6 @@ public class NotificationServiceImpl implements NotificationService {
                 flag=false;
             }
         }
-
         if (flag){
             MailResponse mailResponse = new MailResponse();
             mailResponse.setMessage("There are no Pending Payment");

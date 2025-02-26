@@ -1,6 +1,7 @@
 package sharespace.controller;
 
 
+import lombok.extern.slf4j.Slf4j;
 import sharespace.model.AvailabilityCheck;
 import sharespace.model.Room;
 import sharespace.model.Roommate;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @CrossOrigin
 @RequestMapping("/room")
@@ -47,6 +49,14 @@ public class RoomController {
     public ResponseEntity<RoommateDTO> bookRoom(@PathVariable int roomId, @Valid @RequestBody Roommate roommate){
         RoommateDTO roommateDTO=roomService.bookRoom(roomId, roommate);
         return new ResponseEntity<>(roommateDTO,HttpStatus.OK);
+    }
+
+    @PostMapping("/add-rooms")
+    public ResponseEntity<String> addRooms(@RequestBody Room room){
+        log.info("Adding Room into DB");
+        String response=roomService.addRooms(room);
+        return new ResponseEntity<>(response,HttpStatus.OK);
+
     }
 
 
