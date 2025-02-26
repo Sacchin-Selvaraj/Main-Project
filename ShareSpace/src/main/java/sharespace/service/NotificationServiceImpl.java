@@ -88,18 +88,28 @@ public class NotificationServiceImpl implements NotificationService {
         if (roommateList.isEmpty())
             throw new RoommateException("No Roommates Available");
         System.out.println("room type list "+roommateList);
+        boolean flag=true;
         for (Roommate roommate:roommateList){
             RentStatus roommateRentStatus=roommate.getRentStatus();
             RentStatus rentStatus=RentStatus.PAYMENT_PENDING;
             if (rentStatus==roommateRentStatus){
                 sendMailToRoommate(roommate);
                 System.out.println("Inside the for loop");
+                flag=false;
             }
         }
-        MailResponse mailResponse=new MailResponse();
-        mailResponse.setMessage("Mail sent successfully to the Remaining Roommates");
-        mailResponse.setStatus(Boolean.TRUE);
-        return mailResponse;
+
+        if (flag){
+            MailResponse mailResponse = new MailResponse();
+            mailResponse.setMessage("There are no Pending Payment");
+            mailResponse.setStatus(Boolean.TRUE);
+            return mailResponse;
+        }else {
+            MailResponse mailResponse = new MailResponse();
+            mailResponse.setMessage("Mail sent successfully to the Remaining Roommates");
+            mailResponse.setStatus(Boolean.TRUE);
+            return mailResponse;
+        }
     }
 
     public void sendMailToRoommate(Roommate roommate) {

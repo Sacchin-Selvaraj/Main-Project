@@ -53,5 +53,10 @@ public class Roommate {
     @JsonManagedReference
     private List<Grievances> grievances=new ArrayList<>();
 
+    @OneToMany(mappedBy = "roommate", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<VacateRequest> vacateRequests = new ArrayList<>();
+
+
 }
 

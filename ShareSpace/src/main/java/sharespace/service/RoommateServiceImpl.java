@@ -94,8 +94,7 @@ public class RoommateServiceImpl implements RoommateService {
     @Override
     @Transactional
     public void deleteRoommate(String username) {
-        Roommate roommate = null;
-        roommate = roommateRepo.findByUsername(username);
+        Roommate roommate = roommateRepo.findByUsername(username);
         if (roommate == null)
             throw new RoommateException("No Roommate present under this Username");
         String roomNumber = roommate.getRoomNumber();

@@ -31,13 +31,14 @@ public class GrievanceServiceImpl implements GrievanceService {
 
     @Override
     public String raiseAnGrievance(int roommateId, Grievances grievance) {
+        if(grievance==null)
+            throw new GrievanceException("Invalid data in Grievance");
         Roommate roommate=roommateRepo.findById(roommateId).orElseThrow(() -> new RoommateException("Entered Roommate id was invalid"));
         grievance.setCreatedAt(LocalDate.now());
         grievance.setIsRead(false);
         grievance.setRoommate(roommate);
         roommate.getGrievances().add(grievance);
         roommateRepo.save(roommate);
-        grievanceRepo.save(grievance);
         return "Raised an Grievance Successfully";
     }
 

@@ -1,5 +1,6 @@
 package sharespace.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -22,6 +23,7 @@ public class VacateRequest {
 
     @OneToOne
     @JoinColumn(name = "roommate_id")
+    @JsonBackReference
     private Roommate roommate;
 
 }
