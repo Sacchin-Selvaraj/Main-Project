@@ -17,14 +17,14 @@ public class Room {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int roomId;
-    private int floorNumber;
+    private Integer roomId;
+    private Integer floorNumber;
     private String roomNumber;
     private String roomType;
-    private int capacity;
-    private int currentCapacity;
-    private boolean isAcAvailable;
-    private double price;
+    private Integer capacity;
+    private Integer currentCapacity;
+    private Boolean isAcAvailable;
+    private Double price;
 
     @OneToMany(fetch = FetchType.LAZY,cascade = {CascadeType.PERSIST,CascadeType.MERGE,CascadeType.REMOVE},orphanRemoval = true)
     private List<Roommate> roommateList =new ArrayList<>();

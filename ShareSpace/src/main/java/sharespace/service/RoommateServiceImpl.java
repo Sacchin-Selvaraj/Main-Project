@@ -152,7 +152,6 @@ public class RoommateServiceImpl implements RoommateService {
 
     private boolean checkEmailIdExists(String email) {
         return roommateRepo.existsByEmailIgnoreCase(email);
-
     }
 
     @Override

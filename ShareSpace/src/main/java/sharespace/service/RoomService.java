@@ -18,4 +18,6 @@ public interface RoomService {
     RoommateDTO bookRoom(int roomId, Roommate roommate);
 
     String addRooms(Room room);
+
+    Room editRoom(int roomId,Room room);
 }

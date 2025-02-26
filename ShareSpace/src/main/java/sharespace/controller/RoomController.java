@@ -51,12 +51,18 @@ public class RoomController {
         return new ResponseEntity<>(roommateDTO,HttpStatus.OK);
     }
 
-    @PostMapping("/add-rooms")
+    @PostMapping("/add-room")
     public ResponseEntity<String> addRooms(@RequestBody Room room){
         log.info("Adding Room into DB");
         String response=roomService.addRooms(room);
         return new ResponseEntity<>(response,HttpStatus.OK);
 
+    }
+
+    @PatchMapping("/edit-room/{roomId}")
+    public ResponseEntity<Room> editRoom(@PathVariable int roomId,@RequestBody Room room){
+        Room room1=roomService.editRoom(roomId,room);
+        return new ResponseEntity<>(room1,HttpStatus.OK);
     }
 
 

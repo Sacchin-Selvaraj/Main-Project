@@ -66,12 +66,10 @@ public class RoomServiceImpl implements RoomService {
             capacity = room.getCapacity() - room.getCurrentCapacity();
             if (available.getRoomType().equalsIgnoreCase(room.getRoomType()) &&
                     available.getCapacity() <= capacity &&
-                    available.isWithAC() == room.isAcAvailable()) {
+                    available.isWithAC() == room.getIsAcAvailable()) {
                 matchingRooms.add(room);
             }
         }
-        if (capacity==0)
-            throw new RoomException("No Vacancy in the room");
         if (matchingRooms.isEmpty())
             throw new RoomException("Rooms are not available with your Condition");
 
@@ -163,9 +161,55 @@ public class RoomServiceImpl implements RoomService {
 
     @Override
     public String addRooms(Room room) {
-        return "";
+        if (room==null)
+            throw new RoomException("Invalid Room Details");
+
+        if (checkRoomNumberExists(room.getRoomNumber()))
+            throw new RoomException("Already this room number exists");
+
+        roomRepo.save(room);
+        return "Room have been added Successfully";
     }
 
+    @Override
+    public Room editRoom(int roomId,Room room) {
+        if (room==null)
+            throw new RoomException("Invalid Room Details");
+        Room roomFromDatabase=roomRepo.findById(roomId).orElseThrow(() -> new RoomException("No Room found under this "+roomId+" Id"));
+
+        if (room.getRoomNumber()!=null){
+            if (checkRoomNumberExists(room.getRoomNumber()))
+                throw new RoomException("Already this room number exists");
+            roomFromDatabase.setRoomNumber(room.getRoomNumber());
+        }
+        if (room.getRoomType()!=null){
+            roomFromDatabase.setRoomType(room.getRoomType());
+        }
+        if (room.getPrice()!=null){
+            roomFromDatabase.setPrice(room.getPrice());
+        }
+        if(room.getFloorNumber()!=null){
+            roomFromDatabase.setFloorNumber(room.getFloorNumber());
+        }
+        if (room.getCapacity()!=null){
+            roomFromDatabase.setCapacity(room.getCapacity());
+        }
+        if (room.getCurrentCapacity()!=null){
+            if (room.getCurrentCapacity() >= roomFromDatabase.getCapacity()) {
+                throw new RoomException("Current capacity cannot exceed total capacity");
+            }
+            roomFromDatabase.setCurrentCapacity(room.getCurrentCapacity());
+        }
+        if (room.getIsAcAvailable()!=null){
+            roomFromDatabase.setIsAcAvailable(room.getIsAcAvailable());
+        }
+
+        return roomRepo.save(roomFromDatabase);
+    }
+
+    public Boolean checkRoomNumberExists(String roomNumber){
+       return roomRepo.existsByRoomNumber(roomNumber);
+    }
 
 
 }
