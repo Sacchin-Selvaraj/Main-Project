@@ -43,7 +43,7 @@ public class NotificationServiceImpl implements NotificationService {
 
 
     @Override
-    @Scheduled(cron = "0 * 1 * *  ?")
+    @Scheduled(cron = "0 * 1 * * ?")
     public MailResponse sendMailToRoommate() {
 
         List<Roommate> roommates = roommateRepo.findAll();

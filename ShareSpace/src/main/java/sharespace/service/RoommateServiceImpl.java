@@ -2,6 +2,9 @@ package sharespace.service;
 
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import sharespace.exception.RoomException;
 import sharespace.exception.RoommateException;
@@ -209,6 +212,16 @@ public class RoommateServiceImpl implements RoommateService {
         VacateRequest vacateRequest = vacateRepo.findById(requestId)
                 .orElseThrow(() -> new RoommateException("Vacate request not found"));
         vacateRepo.delete(vacateRequest);
+    }
+
+    @Override
+    public List<Roommate> sortRoommates(Integer pageNumber, Integer pageSize, Integer referralCount, String rentStatus, String sortField, String sortOrder) {
+        Sort sort= sortOrder.equalsIgnoreCase("asc")?Sort.by(sortField).ascending():Sort.by(sortField).descending();
+        Pageable pageable= PageRequest.of(pageNumber,pageSize,sort);
+
+
+
+        return List.of();
     }
 
 }

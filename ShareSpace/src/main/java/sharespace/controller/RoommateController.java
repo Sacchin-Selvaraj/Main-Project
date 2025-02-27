@@ -1,6 +1,7 @@
 package sharespace.controller;
 
 import sharespace.model.*;
+import sharespace.payload.RoommateDTO;
 import sharespace.payload.VacateResponseDTO;
 import sharespace.service.RoommateService;
 import jakarta.validation.Valid;
@@ -79,5 +80,20 @@ public class RoommateController {
         roommateService.markAsRead(requestId);
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/sort")
+    public ResponseEntity<List<Roommate>> sortRoommates(
+            @RequestParam(name = "page") Integer pageNumber,
+            @RequestParam(name = "limit") Integer limit,
+            @RequestParam(name = "rentStatus") String rentStatus,
+            @RequestParam(name = "sortField",defaultValue = "username" ,required = false) String sortField,
+            @RequestParam(name = "sortOrder",defaultValue = "asc" ,required = false) String sortOrder
+
+    ){
+        List<Roommate> roommates=roommateService.sortRoommates(pageNumber,limit,rentStatus,sortField,sortOrder);
+        return new ResponseEntity<>(roommates,HttpStatus.OK);
+
+    }
+
 
 }

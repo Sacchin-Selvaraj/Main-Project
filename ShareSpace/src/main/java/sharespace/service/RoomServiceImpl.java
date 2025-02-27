@@ -195,7 +195,7 @@ public class RoomServiceImpl implements RoomService {
             roomFromDatabase.setCapacity(room.getCapacity());
         }
         if (room.getCurrentCapacity()!=null){
-            if (room.getCurrentCapacity() >= roomFromDatabase.getCapacity()) {
+            if (room.getCurrentCapacity() > roomFromDatabase.getCapacity()) {
                 throw new RoomException("Current capacity cannot exceed total capacity");
             }
             roomFromDatabase.setCurrentCapacity(room.getCurrentCapacity());
@@ -210,6 +210,5 @@ public class RoomServiceImpl implements RoomService {
     public Boolean checkRoomNumberExists(String roomNumber){
        return roomRepo.existsByRoomNumber(roomNumber);
     }
-
 
 }

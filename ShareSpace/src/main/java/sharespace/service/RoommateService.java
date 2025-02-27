@@ -28,4 +28,6 @@ public interface RoommateService {
     List<VacateResponseDTO> getPendingVacateRequests();
 
     void markAsRead(int requestId);
+
+    List<Roommate> sortRoommates(Integer pageNumber, Integer limit,String rentStatus, String sortField, String sortOrder);
 }
