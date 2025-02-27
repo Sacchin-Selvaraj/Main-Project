@@ -82,7 +82,7 @@ public class RoomServiceImpl implements RoomService {
 
         Room room = roomRepo.findById(roomId).orElseThrow(() -> new RoomException("Mentioned Room ID is not available"));
 
-        if (room.getCapacity() == room.getCurrentCapacity())
+        if (Objects.equals(room.getCapacity(), room.getCurrentCapacity()))
             throw new RoomException("Room was Full");
 
         checkUsername(roommate);// check for the Username and Email is already present or not

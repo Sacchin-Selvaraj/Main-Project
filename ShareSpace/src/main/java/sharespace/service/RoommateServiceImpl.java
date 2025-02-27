@@ -2,6 +2,7 @@ package sharespace.service;
 
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -215,13 +216,17 @@ public class RoommateServiceImpl implements RoommateService {
     }
 
     @Override
-    public List<Roommate> sortRoommates(Integer pageNumber, Integer pageSize, Integer referralCount, String rentStatus, String sortField, String sortOrder) {
+    public List<Roommate> sortRoommates(Integer pageNumber, Integer pageSize, String rentStatus, String sortField, String sortOrder) {
         Sort sort= sortOrder.equalsIgnoreCase("asc")?Sort.by(sortField).ascending():Sort.by(sortField).descending();
         Pageable pageable= PageRequest.of(pageNumber,pageSize,sort);
 
-
-
-        return List.of();
+        Page<Roommate> roommatePage;
+        if(rentStatus.isEmpty()){
+            roommatePage=roommateRepo.findAll(pageable);
+        }else {
+            roommatePage=roommateRepo.findByRentStatus(rentStatus,pageable);
+        }
+        return roommatePage.getContent();
     }
 
 }

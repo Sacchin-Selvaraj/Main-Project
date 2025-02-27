@@ -85,7 +85,7 @@ public class RoommateController {
     public ResponseEntity<List<Roommate>> sortRoommates(
             @RequestParam(name = "page") Integer pageNumber,
             @RequestParam(name = "limit") Integer limit,
-            @RequestParam(name = "rentStatus") String rentStatus,
+            @RequestParam(name = "rentStatus",required = false) String rentStatus,
             @RequestParam(name = "sortField",defaultValue = "username" ,required = false) String sortField,
             @RequestParam(name = "sortOrder",defaultValue = "asc" ,required = false) String sortOrder
 

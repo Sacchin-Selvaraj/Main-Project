@@ -1,5 +1,7 @@
 package sharespace.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import sharespace.model.Roommate;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,6 +18,5 @@ public interface RoommateRepository extends JpaRepository<Roommate,Integer>, Pag
 
     Roommate findByReferralId(String referId);
 
-
-
+    Page<Roommate> findByRentStatus(String rentStatus, Pageable pageable);
 }
