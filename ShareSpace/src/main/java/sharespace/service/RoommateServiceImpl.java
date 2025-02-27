@@ -216,16 +216,19 @@ public class RoommateServiceImpl implements RoommateService {
     }
 
     @Override
-    public List<Roommate> sortRoommates(Integer pageNumber, Integer pageSize, String rentStatus, String sortField, String sortOrder) {
+    public List<Roommate> sortRoommates(Integer pageNumber, Integer pageSize, RentStatus rentStatus, String sortField, String sortOrder) {
         Sort sort= sortOrder.equalsIgnoreCase("asc")?Sort.by(sortField).ascending():Sort.by(sortField).descending();
         Pageable pageable= PageRequest.of(pageNumber,pageSize,sort);
 
         Page<Roommate> roommatePage;
-        if(rentStatus.isEmpty()){
+        if(rentStatus==null){
             roommatePage=roommateRepo.findAll(pageable);
         }else {
             roommatePage=roommateRepo.findByRentStatus(rentStatus,pageable);
         }
+        if (roommatePage.isEmpty())
+            throw new RoommateException("No Roommates available");
+
         return roommatePage.getContent();
     }
 

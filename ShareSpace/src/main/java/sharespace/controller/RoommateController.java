@@ -83,16 +83,15 @@ public class RoommateController {
 
     @PostMapping("/sort")
     public ResponseEntity<List<Roommate>> sortRoommates(
-            @RequestParam(name = "page") Integer pageNumber,
+            @RequestParam(name = "page") Integer page,
             @RequestParam(name = "limit") Integer limit,
-            @RequestParam(name = "rentStatus",required = false) String rentStatus,
+            @RequestParam(name = "rentStatus",required = false) RentStatus rentStatus,
             @RequestParam(name = "sortField",defaultValue = "username" ,required = false) String sortField,
             @RequestParam(name = "sortOrder",defaultValue = "asc" ,required = false) String sortOrder
 
     ){
-        List<Roommate> roommates=roommateService.sortRoommates(pageNumber,limit,rentStatus,sortField,sortOrder);
+        List<Roommate> roommates=roommateService.sortRoommates(page,limit,rentStatus,sortField,sortOrder);
         return new ResponseEntity<>(roommates,HttpStatus.OK);
-
     }
 
 

@@ -1,9 +1,6 @@
 package sharespace.service;
 
-import sharespace.model.LoginDetails;
-import sharespace.model.Roommate;
-import sharespace.model.UpdateDetails;
-import sharespace.model.VacateRequest;
+import sharespace.model.*;
 import sharespace.payload.VacateResponseDTO;
 import jakarta.validation.Valid;
 
@@ -29,5 +26,5 @@ public interface RoommateService {
 
     void markAsRead(int requestId);
 
-    List<Roommate> sortRoommates(Integer pageNumber, Integer limit,String rentStatus, String sortField, String sortOrder);
+    List<Roommate> sortRoommates(Integer pageNumber, Integer limit, RentStatus rentStatus, String sortField, String sortOrder);
 }
