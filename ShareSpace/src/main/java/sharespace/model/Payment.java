@@ -24,4 +24,14 @@ public class Payment {
     private String paymentMethod;
     private String username;
     private String roomNumber;
+
+    public Payment(Double amount, String paymentStatus, LocalDate paymentDate, String transactionId, String paymentMethod, String username, String roomNumber) {
+        this.amount = amount;
+        this.paymentStatus = paymentStatus;
+        this.paymentDate = paymentDate;
+        this.transactionId = transactionId;
+        this.paymentMethod = paymentMethod;
+        this.username = username;
+        this.roomNumber = roomNumber;
+    }
 }

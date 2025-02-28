@@ -10,4 +10,6 @@ public interface PaymentRepository extends JpaRepository<Payment,Integer> {
 
     @Query("SELECT p FROM Payment p WHERE transactionId=?1 ")
     Payment findBytransactionId(String razorpayId);
+
+    Payment findByUsername(String username);
 }

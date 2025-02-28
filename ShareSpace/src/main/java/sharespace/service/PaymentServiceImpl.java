@@ -130,13 +130,18 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public Page<Payment> sortPayments(Integer page, Integer limit, LocalDate paymentDate, String sortField, String sortOrder) {
+
+
         return null;
     }
 
     @Override
     public Payment searchUsername(String username) {
-        return null;
-    }
+        Payment payment=paymentRepo.findByUsername(username);
+        if (payment==null)
+            throw new PaymentException("Entered Username was Invalid");
 
+        return payment;
+    }
 
 }
