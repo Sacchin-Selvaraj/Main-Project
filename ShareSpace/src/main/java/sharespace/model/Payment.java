@@ -23,5 +23,5 @@ public class Payment {
     private String transactionId;
     private String paymentMethod;
     private String username;
-
+    private String roomNumber;
 }

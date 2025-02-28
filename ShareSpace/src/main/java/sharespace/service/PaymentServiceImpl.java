@@ -1,5 +1,6 @@
 package sharespace.service;
 
+import org.springframework.data.domain.Page;
 import sharespace.exception.PaymentException;
 import sharespace.exception.RoommateException;
 import sharespace.model.Payment;
@@ -50,6 +51,7 @@ public class PaymentServiceImpl implements PaymentService {
         roommate.setRentStatus(RentStatus.PAYMENT_CREATED);
         roommate.getPaymentList().add(payment); // Circular Reference
         payment.setUsername(roommate.getUsername());
+        payment.setRoomNumber(roommate.getRoomNumber());
         paymentRepo.save(payment);
         roommateRepo.save(roommate);
 
@@ -120,4 +122,21 @@ public class PaymentServiceImpl implements PaymentService {
 
         return paymentList;
     }
+
+    @Override
+    public Payment addPayment(Payment payment) {
+        return paymentRepo.save(payment);
+    }
+
+    @Override
+    public Page<Payment> sortPayments(Integer page, Integer limit, LocalDate paymentDate, String sortField, String sortOrder) {
+        return null;
+    }
+
+    @Override
+    public Payment searchUsername(String username) {
+        return null;
+    }
+
+
 }
