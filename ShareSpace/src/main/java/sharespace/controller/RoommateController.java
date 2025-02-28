@@ -1,5 +1,6 @@
 package sharespace.controller;
 
+import org.springframework.data.domain.Page;
 import sharespace.model.*;
 import sharespace.payload.RoommateDTO;
 import sharespace.payload.VacateResponseDTO;
@@ -82,7 +83,7 @@ public class RoommateController {
     }
 
     @PostMapping("/sort")
-    public ResponseEntity<List<Roommate>> sortRoommates(
+    public ResponseEntity<Page<Roommate>> sortRoommates(
             @RequestParam(name = "page") Integer page,
             @RequestParam(name = "limit") Integer limit,
             @RequestParam(name = "rentStatus",required = false) RentStatus rentStatus,
@@ -90,9 +91,8 @@ public class RoommateController {
             @RequestParam(name = "sortOrder",defaultValue = "asc" ,required = false) String sortOrder
 
     ){
-        List<Roommate> roommates=roommateService.sortRoommates(page,limit,rentStatus,sortField,sortOrder);
+        Page<Roommate> roommates=roommateService.sortRoommates(page,limit,rentStatus,sortField,sortOrder);
         return new ResponseEntity<>(roommates,HttpStatus.OK);
     }
-
 
 }

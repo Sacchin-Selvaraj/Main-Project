@@ -1,5 +1,6 @@
 package sharespace.service;
 
+import org.springframework.data.domain.Page;
 import sharespace.model.*;
 import sharespace.payload.VacateResponseDTO;
 import jakarta.validation.Valid;
@@ -26,5 +27,5 @@ public interface RoommateService {
 
     void markAsRead(int requestId);
 
-    List<Roommate> sortRoommates(Integer pageNumber, Integer limit, RentStatus rentStatus, String sortField, String sortOrder);
+    Page<Roommate> sortRoommates(Integer pageNumber, Integer limit, RentStatus rentStatus, String sortField, String sortOrder);
 }
