@@ -1,9 +1,14 @@
 package sharespace.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.repository.query.Param;
 import sharespace.model.Payment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+
+import java.time.LocalDate;
 
 @Repository
 public interface PaymentRepository extends JpaRepository<Payment,Integer> {
@@ -12,4 +17,7 @@ public interface PaymentRepository extends JpaRepository<Payment,Integer> {
     Payment findBytransactionId(String razorpayId);
 
     Payment findByUsername(String username);
+
+    @Query("SELECT p from Payment p where p.paymentDate=:paymentDate")
+    Page<Payment> findByPaymentDate(@Param("paymentDate") LocalDate paymentDate, Pageable pageable);
 }

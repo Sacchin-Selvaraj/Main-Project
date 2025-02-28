@@ -1,6 +1,9 @@
 package sharespace.service;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import sharespace.exception.PaymentException;
 import sharespace.exception.RoommateException;
 import sharespace.model.Payment;
@@ -130,9 +133,21 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public Page<Payment> sortPayments(Integer page, Integer limit, LocalDate paymentDate, String sortField, String sortOrder) {
+        Sort sort=sortField.equalsIgnoreCase("ASC")?Sort.by(sortField).ascending():Sort.by(sortField).descending();
 
+        Pageable pageable= PageRequest.of(page,limit,sort);
 
-        return null;
+        Page<Payment> paymentPage;
+
+        if (paymentDate==null){
+            paymentPage=paymentRepo.findAll(pageable);
+        }else {
+            paymentPage=paymentRepo.findByPaymentDate(paymentDate,pageable);
+        }
+        if (paymentPage.isEmpty())
+            throw new PaymentException("No Payments available");
+
+        return paymentPage;
     }
 
     @Override
