@@ -128,8 +128,8 @@ public class RoomServiceImpl implements RoomService {
         if (referredRoommate.getReferralCount()>MAXIMUM_REFERRALS)
             throw new RoommateException("Already "+referredRoommate.getUsername()+" have reached max referrals");
 
-        double rentAmount= calculateDiscount(referredRoommate.getReferralCount()+1,referredRoommate);
-        referredRoommate.setRentAmount(rentAmount);
+//        double rentAmount= calculateDiscount(referredRoommate.getReferralCount()+1,referredRoommate);
+//        referredRoommate.setRentAmount(rentAmount);
         referredRoommate.setReferralCount(referredRoommate.getReferralCount()+1);
 
         ReferralDetails referralDetails=new ReferralDetails();
@@ -142,12 +142,12 @@ public class RoomServiceImpl implements RoomService {
 
     }
 
-    private double calculateDiscount(int referCount,Roommate referredRoommate) {
-        if (referCount == 1) return referredRoommate.getRentAmount()-(referredRoommate.getRentAmount()*(REFERRAL_PERCENTAGE*referCount));
-        if (referCount == 2) return referredRoommate.getRentAmount()-(referredRoommate.getRentAmount()*(REFERRAL_PERCENTAGE*referCount));
-        if (referCount == 3) return referredRoommate.getRentAmount()-(referredRoommate.getRentAmount()*(REFERRAL_PERCENTAGE*referCount));
-        return referredRoommate.getRentAmount();
-    }
+//    private double calculateDiscount(int referCount,Roommate referredRoommate) {
+//        if (referCount == 1) return referredRoommate.getRentAmount()-(referredRoommate.getRentAmount()*(REFERRAL_PERCENTAGE*referCount));
+//        if (referCount == 2) return referredRoommate.getRentAmount()-(referredRoommate.getRentAmount()*(REFERRAL_PERCENTAGE*referCount));
+//        if (referCount == 3) return referredRoommate.getRentAmount()-(referredRoommate.getRentAmount()*(REFERRAL_PERCENTAGE*referCount));
+//        return referredRoommate.getRentAmount();
+//    }
 
     public String generateRoommateUniqueNumber(String username) {
         return username.substring(0,4) + UUID.randomUUID().toString().substring(0, 4);

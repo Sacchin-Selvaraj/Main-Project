@@ -32,4 +32,11 @@ public class NotificationController {
 
         return new ResponseEntity<>(notificationService.sendPendingMail(),HttpStatus.OK);
     }
+
+    @GetMapping("/load")
+    public MailResponse sendmailAutomatically(){
+        return notificationService.sendMailToRoommateAutomatically();
+
+    }
+
 }

@@ -7,4 +7,6 @@ public interface NotificationService {
     MailResponse sendMailToRoommate();
 
     MailResponse sendPendingMail();
+
+    MailResponse sendMailToRoommateAutomatically();
 }

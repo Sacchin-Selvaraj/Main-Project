@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -45,52 +47,105 @@ public class NotificationServiceImpl implements NotificationService {
         this.roomRepo = roomRepo;
         this.templateEngine = templateEngine;
     }
+//
+//    @Scheduled(cron = "0 * 1 * * ?")
+//    public MailResponse sendMailToRoommateAutomatically() {
+//        List<Roommate> roommates = roommateRepo.findAll();
+//        List<Roommate> updatedRoommates = new ArrayList<>();
+//        if (roommates.isEmpty())
+//            throw new RoommateException("No Roommates details present");
+//        for (Roommate roommate : roommates) {
+//            roommate.setRentStatus(RentStatus.PAYMENT_PENDING);
+//            roommate.setRentAmount(calculateRentAmount(roommate));
+//            updatedRoommates.add(roommate);
+//            sendMailToRoommate(roommate);
+//        }
+//        roommateRepo.saveAll(updatedRoommates);
+//        MailResponse mailResponse=new MailResponse();
+//        mailResponse.setMessage("Mail sent successfully");
+//        mailResponse.setStatus(Boolean.TRUE);
+//        return mailResponse;
+//    }
+//
+//    private double calculateRentAmount(Roommate roommate) {
+//
+//        String roomNumber=roommate.getRoomNumber();
+//        Room room=roomRepo.findByRoomNumber(roomNumber);
+//        if (room == null) {
+//            throw new RoommateException("Room not found for room number: " + roomNumber);
+//        }
+//        double roomRent= room.getPrice();
+//
+//        List<ReferralDetails>referralDetailsList=roommate.getReferralDetailsList();
+//        if (referralDetailsList.isEmpty()){
+//            return roomRent;
+//        }
+//        List<ReferralDetails> deleteReferrals=new ArrayList<>();
+//        int count=0;
+//        for (ReferralDetails referral:referralDetailsList){
+//            Roommate roommate1=roommateRepo.findByRoommateUniqueId(referral.getRoommateUniqueId());
+//            if (roommate1!=null){
+//                count++;
+//            }else {
+//                deleteReferrals.add(referral);
+//            }
+//        }
+//
+//        if (!deleteReferrals.isEmpty()) {
+//            for (ReferralDetails deleteReferral : deleteReferrals) {
+//                roommate.getReferralDetailsList().remove(deleteReferral);
+//            }
+//        }
+//        System.out.println("count"+count);
+//        System.out.println(roomRent-(roomRent*(REFERRAL_PERCENTAGE*count)));
+//        return roomRent-(roomRent*(REFERRAL_PERCENTAGE*count));
+//
+//    }
 
     @Scheduled(cron = "0 * 1 * * ?")
     public MailResponse sendMailToRoommateAutomatically() {
         List<Roommate> roommates = roommateRepo.findAll();
         if (roommates.isEmpty())
             throw new RoommateException("No Roommates details present");
+
+        // Fetch all roommates by unique ID for fast lookups
+        Map<String, Roommate> roommatesMap = roommates.stream()
+                .collect(Collectors.toMap(Roommate::getRoommateUniqueId, Function.identity()));
+
+        List<Roommate> updatedRoommates = new ArrayList<>();
         for (Roommate roommate : roommates) {
             roommate.setRentStatus(RentStatus.PAYMENT_PENDING);
-            roommate.setRentAmount(calculateRentAmount(roommate));
-            roommateRepo.save(roommate);
-            sendMailToRoommate(roommate);
+            roommate.setRentAmount(calculateRentAmount(roommate, roommatesMap));
+            updatedRoommates.add(roommate);
         }
-        MailResponse mailResponse=new MailResponse();
-        mailResponse.setMessage("Mail sent successfully");
-        mailResponse.setStatus(Boolean.TRUE);
-        return mailResponse;
+
+        roommateRepo.saveAll(updatedRoommates); // Batch save
+        updatedRoommates.forEach(this::sendMailToRoommate); // Send mail asynchronously if needed
+
+        return new MailResponse("Mail sent successfully", true);
     }
 
-    private double calculateRentAmount(Roommate roommate) {
+    private double calculateRentAmount(Roommate roommate, Map<String, Roommate> roommatesMap) {
+        String roomNumber = roommate.getRoomNumber();
+        Room room = roomRepo.findByRoomNumber(roomNumber);
+        if (room == null) {
+            throw new RoommateException("Room not found for room number: " + roomNumber);
+        }
+        double roomRent = room.getPrice();
 
-        String roomNumber=roommate.getRoomNumber();
-        Room room=roomRepo.findByRoomNumber(roomNumber);
-        double roomRent= roommate.getRentAmount();
-
-        List<ReferralDetails>referralDetailsList=roommate.getReferralDetailsList();
-        if (referralDetailsList.isEmpty()){
+        List<ReferralDetails> referralDetailsList = roommate.getReferralDetailsList();
+        if (referralDetailsList.isEmpty()) {
             return roomRent;
         }
-        List<ReferralDetails> deleteReferrals=new ArrayList<>();
-        int count=0;
-        for (ReferralDetails referral:referralDetailsList){
-            Roommate roommate1=roommateRepo.findByRoommateUniqueId(referral.getRoommateUniqueId());
-            if (roommate1!=null){
-                count++;
-            }else {
-                deleteReferrals.add(referral);
-            }
-        }
 
-        if (!deleteReferrals.isEmpty()) {
-            for (ReferralDetails deleteReferral : deleteReferrals) {
-                roommate.getReferralDetailsList().remove(deleteReferral);
-            }
-        }
-        return roomRent-(roomRent*(REFERRAL_PERCENTAGE*count));
+        int count = (int) referralDetailsList.stream()
+                .filter(referral -> roommatesMap.containsKey(referral.getRoommateUniqueId()))
+                .count();
 
+        // Clean up invalid referrals
+        referralDetailsList.removeIf(referral -> !roommatesMap.containsKey(referral.getRoommateUniqueId()));
+
+        return roomRent - (roomRent * (REFERRAL_PERCENTAGE * count));
     }
 
     @Override
