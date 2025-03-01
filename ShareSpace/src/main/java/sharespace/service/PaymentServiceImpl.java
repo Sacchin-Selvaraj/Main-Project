@@ -106,7 +106,7 @@ public class PaymentServiceImpl implements PaymentService {
         roommate.setRentStatus(RentStatus.PAYMENT_DONE);
         roommateRepo.save(roommate);
         if (payment != null) {
-            payment.setPaymentStatus(paymentData.get("status"));
+            payment.setPaymentStatus("PAYMENT_DONE");
             payment.setTransactionId(request.getPaymentId());
             payment.setPaymentMethod(paymentData.get("method"));
             paymentRepo.save(payment);
@@ -133,10 +133,10 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public Page<Payment> sortPayments(Integer page, Integer limit, LocalDate paymentDate, String sortField, String sortOrder) {
-        Sort sort=sortField.equalsIgnoreCase("ASC")?Sort.by(sortField).ascending():Sort.by(sortField).descending();
+        Sort sort=sortOrder.equalsIgnoreCase("asc")?Sort.by(sortField).ascending():Sort.by(sortField).descending();
 
         Pageable pageable= PageRequest.of(page,limit,sort);
-
+        System.out.println(paymentDate+"---------------------");
         Page<Payment> paymentPage;
 
         if (paymentDate==null){
@@ -145,18 +145,23 @@ public class PaymentServiceImpl implements PaymentService {
             paymentPage=paymentRepo.findByPaymentDate(paymentDate,pageable);
         }
         if (paymentPage.isEmpty())
-            throw new PaymentException("No Payments available");
+            throw new PaymentException("No Payment available ");
 
         return paymentPage;
     }
 
     @Override
-    public Payment searchUsername(String username) {
-        Payment payment=paymentRepo.findByUsername(username);
-        if (payment==null)
-            throw new PaymentException("Entered Username was Invalid");
+    public List<Payment> searchUsername(String username) {
+        List<Payment> paymentList;
+        if (username.length()<3){
+            paymentList=paymentRepo.findAllByRoomNumber(username);
+        }else {
+            paymentList = paymentRepo.findAllByUsername(username);
+        }
+        if (paymentList.isEmpty())
+            throw new PaymentException("No Payments available under - "+username);
 
-        return payment;
+        return paymentList;
     }
 
 }

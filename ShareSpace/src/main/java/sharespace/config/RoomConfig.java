@@ -22,6 +22,8 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 
+import static sharespace.model.RentStatus.*;
+
 @Configuration
 @Component
 @EnableScheduling
@@ -73,15 +75,15 @@ public class RoomConfig implements CommandLineRunner {
         List<Payment> paymentList=Arrays.asList(
 
                 new Payment(7000.00,"PAYMENT_DONE", LocalDate.now(),"345rda","Netbandking","aacchin","F1"),
-                new Payment(6000.00,"PAYMENT_PENDING", LocalDate.now(),"345rda","Netbandking","bacchin","F2"),
-                new Payment(8000.00,"PAYMENT_DONE", LocalDate.now(),"345rda","Netbandking","cacchin","S1"),
-                new Payment(6000.00,"PAYMENT_PENDING", LocalDate.now(),"345rda","Netbandking","facchin","S2"),
-                new Payment(3000.00,"PAYMENT_DONE", LocalDate.now(),"345rda","Netbandking","gacchin","T1"),
-                new Payment(4000.00,"PAYMENT_PENDING", LocalDate.now(),"345rda","Netbandking","hacchin","T2"),
-                new Payment(5000.00,"PAYMENT_DONE", LocalDate.now(),"345rda","Netbandking","racchin","A1"),
-                new Payment(9000.00,"PAYMENT_PENDING", LocalDate.now(),"345rda","Netbandking","sacchin","D3"),
-                new Payment(5000.00,"PAYMENT_DONE", LocalDate.now(),"345rda","Netbandking","uacchin","M4"),
-                new Payment(6500.00,"PAYMENT_PENDING", LocalDate.now(),"345rda","Netbandking","zacchin","L3")
+                new Payment(6000.00,"PAYMENT_PENDING", LocalDate.now().minusDays(5),"345rda","Netbandking","bacchin","F2"),
+                new Payment(8000.00,"PAYMENT_DONE", LocalDate.now().minusDays(8),"345rda","Netbandking","cacchin","S1"),
+                new Payment(6000.00,"PAYMENT_PENDING", LocalDate.now().minusDays(2),"345rda","Netbandking","facchin","S2"),
+                new Payment(3000.00,"PAYMENT_DONE", LocalDate.now().minusDays(45),"345rda","Netbandking","gacchin","T1"),
+                new Payment(4000.00,"PAYMENT_PENDING", LocalDate.now().plusDays(45),"345rda","Netbandking","hacchin","T2"),
+                new Payment(5000.00,"PAYMENT_DONE", LocalDate.now().plusDays(89),"345rda","Netbandking","racchin","A1"),
+                new Payment(9000.00,"PAYMENT_PENDING", LocalDate.now().plusDays(34),"345rda","Netbandking","sacchin","D3"),
+                new Payment(5000.00,"PAYMENT_DONE", LocalDate.now().plusDays(31),"345rda","Netbandking","uacchin","M4"),
+                new Payment(6500.00,"PAYMENT_PENDING", LocalDate.now().plusDays(1),"345rda","Netbandking","zacchin","L3")
         );
         paymentRepo.saveAll(paymentList);
         logger.info("Payment details are added successfully");

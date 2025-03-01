@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Repository
 public interface PaymentRepository extends JpaRepository<Payment,Integer> {
@@ -20,4 +21,8 @@ public interface PaymentRepository extends JpaRepository<Payment,Integer> {
 
     @Query("SELECT p from Payment p where p.paymentDate=:paymentDate")
     Page<Payment> findByPaymentDate(@Param("paymentDate") LocalDate paymentDate, Pageable pageable);
+
+    List<Payment> findAllByRoomNumber(String username);
+
+    List<Payment> findAllByUsername(String username);
 }

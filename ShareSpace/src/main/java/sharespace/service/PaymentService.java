@@ -19,5 +19,5 @@ public interface PaymentService {
 
     Page<Payment> sortPayments(Integer page, Integer limit, LocalDate paymentDate, String sortField, String sortOrder);
 
-    Payment searchUsername(String username);
+    List<Payment> searchUsername(String username);
 }

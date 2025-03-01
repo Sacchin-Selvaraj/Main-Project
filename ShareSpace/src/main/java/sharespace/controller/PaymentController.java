@@ -66,13 +66,11 @@ public class PaymentController {
     }
 
     @GetMapping("/search/{username}")
-    public ResponseEntity<Payment> searchUser(@PathVariable String username){
-        Payment payment=paymentService.searchUsername(username);
+    public ResponseEntity<List<Payment>> searchUser(@PathVariable String username){
+        List<Payment> payment=paymentService.searchUsername(username);
         return new ResponseEntity<>(payment,HttpStatus.OK);
 
     }
-
-
 
 }
 

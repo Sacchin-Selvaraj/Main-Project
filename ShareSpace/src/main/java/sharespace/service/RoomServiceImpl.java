@@ -82,6 +82,12 @@ public class RoomServiceImpl implements RoomService {
 
         Room room = roomRepo.findById(roomId).orElseThrow(() -> new RoomException("Mentioned Room ID is not available"));
 
+        if (roommate.getCheckOutDate()!=null){
+            if (roommate.getCheckOutDate().isBefore(LocalDate.now())){
+                    throw new RoomException("Check out date can't be entered in past");
+            }
+        }
+
         if (Objects.equals(room.getCapacity(), room.getCurrentCapacity()))
             throw new RoomException("Room was Full");
 
@@ -96,7 +102,7 @@ public class RoomServiceImpl implements RoomService {
         if (roommate.getWithFood()) {
             roommate.setRentAmount(room.getPrice());
         } else {
-            roommate.setRentAmount(room.getPrice() - 500);
+            roommate.setRentAmount(room.getPrice() - 1000);
         }
         roommate.setCheckInDate(LocalDate.now());
         roommate.setReferralId(generateReferId(roommate.getUsername()));
