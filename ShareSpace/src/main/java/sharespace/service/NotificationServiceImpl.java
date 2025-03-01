@@ -1,5 +1,9 @@
 package sharespace.service;
 
+import jakarta.transaction.Transactional;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import sharespace.exception.NotificationException;
 import sharespace.exception.RoommateException;
 import sharespace.model.*;
@@ -26,6 +30,7 @@ import java.util.stream.Collectors;
 
 
 @Service
+@Slf4j
 public class NotificationServiceImpl implements NotificationService {
 
     private final JavaMailSender javaMailSender;
@@ -38,7 +43,10 @@ public class NotificationServiceImpl implements NotificationService {
 
     private static final double REFERRAL_PERCENTAGE=0.05;
 
+
     @Value("${spring.mail.username}")
+    @Getter
+    @Setter
     private String fromMail;
 
     public NotificationServiceImpl(JavaMailSender javaMailSender, RoommateRepository roommateRepo, RoomRepository roomRepo, SpringTemplateEngine templateEngine) {
@@ -99,28 +107,33 @@ public class NotificationServiceImpl implements NotificationService {
 //        System.out.println("count"+count);
 //        System.out.println(roomRent-(roomRent*(REFERRAL_PERCENTAGE*count)));
 //        return roomRent-(roomRent*(REFERRAL_PERCENTAGE*count));
-//
+//0 0 0 1 * ?
 //    }
 
-    @Scheduled(cron = "0 * 1 * * ?")
+    @Scheduled(cron = "0 0 0 1 * ?")
+    @Transactional
     public MailResponse sendMailToRoommateAutomatically() {
-        List<Roommate> roommates = roommateRepo.findAll();
-        if (roommates.isEmpty())
-            throw new RoommateException("No Roommates details present");
+       try {
+           List<Roommate> roommates = roommateRepo.findAll();
+           if (roommates.isEmpty())
+               throw new RoommateException("No Roommates details present");
 
-        // Fetch all roommates by unique ID for fast lookups
-        Map<String, Roommate> roommatesMap = roommates.stream()
-                .collect(Collectors.toMap(Roommate::getRoommateUniqueId, Function.identity()));
+           // Fetch all roommates by unique ID for fast lookups
+           Map<String, Roommate> roommatesMap = roommates.stream()
+                   .collect(Collectors.toMap(Roommate::getRoommateUniqueId, Function.identity()));
 
-        List<Roommate> updatedRoommates = new ArrayList<>();
-        for (Roommate roommate : roommates) {
-            roommate.setRentStatus(RentStatus.PAYMENT_PENDING);
-            roommate.setRentAmount(calculateRentAmount(roommate, roommatesMap));
-            updatedRoommates.add(roommate);
-        }
+           List<Roommate> updatedRoommates = new ArrayList<>();
+           for (Roommate roommate : roommates) {
+               roommate.setRentStatus(RentStatus.PAYMENT_PENDING);
+               roommate.setRentAmount(calculateRentAmount(roommate, roommatesMap));
+               updatedRoommates.add(roommate);
+           }
 
-        roommateRepo.saveAll(updatedRoommates); // Batch save
-        updatedRoommates.forEach(this::sendMailToRoommate); // Send mail asynchronously if needed
+           roommateRepo.saveAll(updatedRoommates); // Batch save
+           updatedRoommates.forEach(this::sendMailToRoommate);// Send mail asynchronously if needed
+       }catch (RoommateException e) {
+           log.error("Error in sending Mail to Roommate Automatically: ", e);
+       }
 
         return new MailResponse("Mail sent successfully", true);
     }

@@ -1,6 +1,5 @@
 package sharespace.service;
 
-import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -55,7 +54,7 @@ class NotificationServiceImplTest {
         roommate2.setRentAmount(1200.0);
 
         List<Roommate> roommates = Arrays.asList(roommate1, roommate2);
-        //notificationService.setFromMail("noreply@sharespace.com");
+        notificationService.setFromMail("noreply@sharespace.com");
 
         when(roommateRepo.findAll()).thenReturn(roommates);
 
@@ -101,7 +100,7 @@ class NotificationServiceImplTest {
 
         when(roommateRepo.findAll()).thenReturn(roommates);
 
-        //notificationService.setFromMail("noreply@sharespace.com");
+        notificationService.setFromMail("noreply@sharespace.com");
 
         MimeMessage mimeMessage = mock(MimeMessage.class);
         when(javaMailSender.createMimeMessage()).thenReturn(mimeMessage);

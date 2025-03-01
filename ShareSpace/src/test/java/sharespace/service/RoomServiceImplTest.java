@@ -196,7 +196,7 @@ class RoomServiceImplTest {
 
         when(roommateRepo.findByReferralId(referralId)).thenReturn(referredRoommate);
 
-        roomService.referralProcess(referralId,roommate);
+        roomService.referralProcess(roommate);
 
         verify(roommateRepo,times(1)).findByReferralId(referralId);
         verify(roommateRepo,times(1)).save(referredRoommate);
@@ -210,7 +210,7 @@ class RoomServiceImplTest {
         when(roommateRepo.findByReferralId("referral123")).thenReturn(null);
 
         RoommateException exception = assertThrows(RoommateException.class,
-                () -> roomService.referralProcess(referralId,roommate));
+                () -> roomService.referralProcess(roommate));
         assertEquals("No Roommate matches with the entered Referral ID", exception.getMessage());
         verify(roommateRepo,times(1)).findByReferralId("referral123");
     }
@@ -232,7 +232,7 @@ class RoomServiceImplTest {
         when(roommateRepo.findByReferralId("referral123")).thenReturn(referredRoommate);
 
         RoommateException exception = assertThrows(RoommateException.class,
-                () -> roomService.referralProcess(referralId,roommate));
+                () -> roomService.referralProcess(roommate));
         assertEquals("Already "+referredRoommate.getUsername()+" have reached max referrals", exception.getMessage());
         verify(roommateRepo,times(1)).findByReferralId("referral123");
 
