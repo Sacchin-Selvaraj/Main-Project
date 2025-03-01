@@ -209,7 +209,7 @@ class RoommateServiceImplTest {
         Room room=new Room();
         room.setRoomNumber("F1");
         room.setCurrentCapacity(3);
-        room.setPrice(7000);
+        room.setPrice(7000.00);
 
         when(roommateRepo.findByUsername(username)).thenReturn(roommate1);
         when(roomRepo.findByRoomNumber(roommate1.getRoomNumber())).thenReturn(room);

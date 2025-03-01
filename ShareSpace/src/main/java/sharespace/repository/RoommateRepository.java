@@ -10,6 +10,8 @@ import sharespace.model.Roommate;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface RoommateRepository extends JpaRepository<Roommate,Integer>, PagingAndSortingRepository<Roommate,Integer> {
     
@@ -21,6 +23,9 @@ public interface RoommateRepository extends JpaRepository<Roommate,Integer>, Pag
 
     Roommate findByReferralId(String referId);
 
-    @Query("SELECT r from Roommate r where r.rentStatus = :rentStatus")
+    @Query("SELECT r from Roommate r WHERE r.rentStatus = :rentStatus")
     Page<Roommate> findByRentStatus(@Param("rentStatus") RentStatus rentStatus, Pageable pageable);
+
+    @Query("SELECT r from Roommate r WHERE r.roommateUniqueId=:roommateUniqueId")
+    Roommate findByRoommateUniqueId(@Param("roommateUniqueId") String roommateUniqueId);
 }

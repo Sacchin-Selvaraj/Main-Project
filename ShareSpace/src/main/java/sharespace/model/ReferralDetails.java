@@ -19,13 +19,6 @@ public class ReferralDetails {
     private int referralId;
     private String username;
     private LocalDate referralDate;
-
-    @OneToOne
-    @JsonBackReference
-    @JoinColumn(name = "referredRoommate")
-    private Roommate roommate;
-
-
-
+    private String roommateUniqueId;
 
 }

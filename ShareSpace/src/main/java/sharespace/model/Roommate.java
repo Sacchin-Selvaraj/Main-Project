@@ -23,6 +23,7 @@ public class Roommate {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private int roommateId;
+    private String roommateUniqueId;
     @NotNull
     @Size(min = 6,max = 12, message = "Username must be between 6 to 12 characters")
     private String username;
@@ -45,10 +46,8 @@ public class Roommate {
     @OneToMany(fetch = FetchType.LAZY,cascade = CascadeType.ALL,orphanRemoval = true)
     private List<Payment> paymentList;
 
-    @OneToMany(mappedBy = "roommate", fetch = FetchType.LAZY,cascade = CascadeType.ALL,orphanRemoval = true)
-    @JsonManagedReference
-    private List<ReferralDetails> referralDetailsList;
-
+    @OneToMany(fetch = FetchType.LAZY,cascade = CascadeType.ALL,orphanRemoval = true)
+    private List<ReferralDetails> referralDetailsList=new ArrayList<>();
 
     @OneToMany(mappedBy = "roommate",fetch = FetchType.LAZY,cascade = CascadeType.ALL,orphanRemoval = true)
     @JsonManagedReference

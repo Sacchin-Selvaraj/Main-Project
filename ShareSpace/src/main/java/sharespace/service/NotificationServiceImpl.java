@@ -2,9 +2,8 @@ package sharespace.service;
 
 import sharespace.exception.NotificationException;
 import sharespace.exception.RoommateException;
-import sharespace.model.MailResponse;
-import sharespace.model.RentStatus;
-import sharespace.model.Roommate;
+import sharespace.model.*;
+import sharespace.repository.RoomRepository;
 import sharespace.repository.RoommateRepository;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -18,6 +17,7 @@ import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import java.time.LocalDate;
 import java.time.Month;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,20 +30,70 @@ public class NotificationServiceImpl implements NotificationService {
 
     private final RoommateRepository roommateRepo;
 
+    private final RoomRepository roomRepo;
+
     private final SpringTemplateEngine templateEngine;
+
+    private static final double REFERRAL_PERCENTAGE=0.05;
 
     @Value("${spring.mail.username}")
     private String fromMail;
 
-    public NotificationServiceImpl(JavaMailSender javaMailSender, RoommateRepository roommateRepo, SpringTemplateEngine templateEngine) {
+    public NotificationServiceImpl(JavaMailSender javaMailSender, RoommateRepository roommateRepo, RoomRepository roomRepo, SpringTemplateEngine templateEngine) {
         this.javaMailSender = javaMailSender;
         this.roommateRepo = roommateRepo;
+        this.roomRepo = roomRepo;
         this.templateEngine = templateEngine;
     }
 
+    @Scheduled(cron = "0 * 1 * * ?")
+    public MailResponse sendMailToRoommateAutomatically() {
+        List<Roommate> roommates = roommateRepo.findAll();
+        if (roommates.isEmpty())
+            throw new RoommateException("No Roommates details present");
+        for (Roommate roommate : roommates) {
+            roommate.setRentStatus(RentStatus.PAYMENT_PENDING);
+            roommate.setRentAmount(calculateRentAmount(roommate));
+            roommateRepo.save(roommate);
+            sendMailToRoommate(roommate);
+        }
+        MailResponse mailResponse=new MailResponse();
+        mailResponse.setMessage("Mail sent successfully");
+        mailResponse.setStatus(Boolean.TRUE);
+        return mailResponse;
+    }
+
+    private double calculateRentAmount(Roommate roommate) {
+
+        String roomNumber=roommate.getRoomNumber();
+        Room room=roomRepo.findByRoomNumber(roomNumber);
+        double roomRent= roommate.getRentAmount();
+
+        List<ReferralDetails>referralDetailsList=roommate.getReferralDetailsList();
+        if (referralDetailsList.isEmpty()){
+            return roomRent;
+        }
+        List<ReferralDetails> deleteReferrals=new ArrayList<>();
+        int count=0;
+        for (ReferralDetails referral:referralDetailsList){
+            Roommate roommate1=roommateRepo.findByRoommateUniqueId(referral.getRoommateUniqueId());
+            if (roommate1!=null){
+                count++;
+            }else {
+                deleteReferrals.add(referral);
+            }
+        }
+
+        if (!deleteReferrals.isEmpty()) {
+            for (ReferralDetails deleteReferral : deleteReferrals) {
+                roommate.getReferralDetailsList().remove(deleteReferral);
+            }
+        }
+        return roomRent-(roomRent*(REFERRAL_PERCENTAGE*count));
+
+    }
 
     @Override
-    @Scheduled(cron = "0 * 1 * * ?")
     public MailResponse sendMailToRoommate() {
 
         List<Roommate> roommates = roommateRepo.findAll();

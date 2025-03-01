@@ -91,17 +91,15 @@ public class RoomServiceImpl implements RoomService {
         if (Objects.equals(room.getCapacity(), room.getCurrentCapacity()))
             throw new RoomException("Room was Full");
 
+
+        roommate.setRoommateUniqueId(generateRoommateUniqueNumber(roommate.getUsername()));
         checkUsername(roommate);// check for the Username and Email is already present or not
 
         String encrpytedPassword=passwordUtils.encrypt(roommate.getPassword());
         roommate.setPassword(encrpytedPassword);
 
-        String referralId=roommate.getReferralId();
-        roommate.setReferralId("");
-        roommateRepo.save(roommate);
-
         if(roommate.getReferralId()!=null&&roommate.getReferralId().length()>5)
-            referralProcess(referralId,roommate);
+            referralProcess(roommate);
 
         if (roommate.getWithFood()) {
             roommate.setRentAmount(room.getPrice());
@@ -122,9 +120,9 @@ public class RoomServiceImpl implements RoomService {
 
     }
 
-    public void referralProcess(String referralId,Roommate roommate) {
+    public void referralProcess(Roommate roommate) {
 
-        Roommate referredRoommate=roommateRepo.findByReferralId(referralId);
+        Roommate referredRoommate=roommateRepo.findByReferralId(roommate.getReferralId());
         if(referredRoommate==null)
             throw new RoommateException("No Roommate matches with the entered Referral ID");
         if (referredRoommate.getReferralCount()>MAXIMUM_REFERRALS)
@@ -137,7 +135,7 @@ public class RoomServiceImpl implements RoomService {
         ReferralDetails referralDetails=new ReferralDetails();
         referralDetails.setUsername(roommate.getUsername());
         referralDetails.setReferralDate(LocalDate.now());
-        referralDetails.setRoommate(roommate);
+        referralDetails.setRoommateUniqueId(roommate.getRoommateUniqueId());
 
         referredRoommate.getReferralDetailsList().add(referralDetails);
         roommateRepo.save(referredRoommate);
@@ -149,6 +147,10 @@ public class RoomServiceImpl implements RoomService {
         if (referCount == 2) return referredRoommate.getRentAmount()-(referredRoommate.getRentAmount()*(REFERRAL_PERCENTAGE*referCount));
         if (referCount == 3) return referredRoommate.getRentAmount()-(referredRoommate.getRentAmount()*(REFERRAL_PERCENTAGE*referCount));
         return referredRoommate.getRentAmount();
+    }
+
+    public String generateRoommateUniqueNumber(String username) {
+        return username.substring(0,4) + UUID.randomUUID().toString().substring(0, 4);
     }
 
     public String generateReferId(String username) {

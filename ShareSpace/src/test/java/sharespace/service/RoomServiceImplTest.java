@@ -55,7 +55,7 @@ class RoomServiceImplTest {
         room.setCapacity(2);
         room.setCurrentCapacity(1);
         room.setPrice(7000.0);
-        room.setAcAvailable(true);
+        room.setIsAcAvailable(true);
 
         roommate = new Roommate();
         roommate.setUsername("TestUser");
@@ -196,7 +196,7 @@ class RoomServiceImplTest {
 
         when(roommateRepo.findByReferralId(referralId)).thenReturn(referredRoommate);
 
-        roomService.referralProcess(roommate);
+        roomService.referralProcess(referralId,roommate);
 
         verify(roommateRepo,times(1)).findByReferralId(referralId);
         verify(roommateRepo,times(1)).save(referredRoommate);
@@ -204,19 +204,22 @@ class RoomServiceImplTest {
 
     @Test
     void referralProcess_NoMatchingRoommate(){
-        roommate.setReferralId("referral123");
+        String referralId="referral123";
+        roommate.setReferralId(referralId);
 
         when(roommateRepo.findByReferralId("referral123")).thenReturn(null);
 
         RoommateException exception = assertThrows(RoommateException.class,
-                () -> roomService.referralProcess(roommate));
+                () -> roomService.referralProcess(referralId,roommate));
         assertEquals("No Roommate matches with the entered Referral ID", exception.getMessage());
         verify(roommateRepo,times(1)).findByReferralId("referral123");
     }
 
     @Test
     void referralProcess_MaxReferralExceed() {
-        roommate.setReferralId("referral123");
+
+        String referralId="referral123";
+        roommate.setReferralId(referralId);
 
         Roommate referredRoommate = new Roommate();
         referredRoommate.setUsername("user2");
@@ -229,7 +232,7 @@ class RoomServiceImplTest {
         when(roommateRepo.findByReferralId("referral123")).thenReturn(referredRoommate);
 
         RoommateException exception = assertThrows(RoommateException.class,
-                () -> roomService.referralProcess(roommate));
+                () -> roomService.referralProcess(referralId,roommate));
         assertEquals("Already "+referredRoommate.getUsername()+" have reached max referrals", exception.getMessage());
         verify(roommateRepo,times(1)).findByReferralId("referral123");
 
