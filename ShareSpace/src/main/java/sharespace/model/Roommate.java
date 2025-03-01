@@ -24,10 +24,10 @@ public class Roommate {
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private int roommateId;
     @NotNull
-    @Size(min = 6)
+    @Size(min = 6,max = 12, message = "Username must be between 6 to 12 characters")
     private String username;
     @NotNull
-    @Size(min = 6)
+    @Size(min = 6, message = "Password must be between 6 to 12 characters")
     private String password;
     @Email
     @NotBlank

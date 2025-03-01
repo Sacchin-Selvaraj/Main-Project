@@ -50,7 +50,6 @@ public class NotificationServiceImpl implements NotificationService {
         if (roommates.isEmpty())
             throw new RoommateException("No Roommates details present");
         for (Roommate roommate : roommates) {
-            roommate.setRentStatus(RentStatus.PAYMENT_PENDING);
             sendMailToRoommate(roommate);
         }
         MailResponse mailResponse=new MailResponse();

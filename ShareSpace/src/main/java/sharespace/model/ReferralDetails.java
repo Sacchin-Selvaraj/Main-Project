@@ -22,4 +22,7 @@ public class ReferralDetails {
     private String username;
     private LocalDate referralDate;
 
+
+
+
 }

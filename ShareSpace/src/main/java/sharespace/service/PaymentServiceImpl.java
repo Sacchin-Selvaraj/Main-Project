@@ -79,7 +79,7 @@ public class PaymentServiceImpl implements PaymentService {
         int amountPaid = (int) order.get("amount");
         double rent = (double) amountPaid;
         payment.setTransactionId(order.get("id"));
-        payment.setPaymentStatus(order.get("status"));
+        payment.setPaymentStatus("PAYMENT_FAILED");
         payment.setAmount(rent/100);
         payment.setPaymentDate(LocalDate.now());
         payment.setPaymentMethod(order.get("entity"));
@@ -136,7 +136,6 @@ public class PaymentServiceImpl implements PaymentService {
         Sort sort=sortOrder.equalsIgnoreCase("asc")?Sort.by(sortField).ascending():Sort.by(sortField).descending();
 
         Pageable pageable= PageRequest.of(page,limit,sort);
-        System.out.println(paymentDate+"---------------------");
         Page<Payment> paymentPage;
 
         if (paymentDate==null){

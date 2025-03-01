@@ -128,7 +128,6 @@ public class RoomServiceImpl implements RoomService {
             throw new RoommateException("Already "+referredRoommate.getUsername()+" have reached max referrals");
 
         double rentAmount= calculateDiscount(referredRoommate.getReferralCount()+1,referredRoommate);
-        System.out.println(rentAmount);
         referredRoommate.setRentAmount(rentAmount);
         referredRoommate.setReferralCount(referredRoommate.getReferralCount()+1);
 
