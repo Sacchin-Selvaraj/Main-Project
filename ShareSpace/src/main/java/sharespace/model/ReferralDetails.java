@@ -1,9 +1,7 @@
 package sharespace.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -21,6 +19,11 @@ public class ReferralDetails {
     private int referralId;
     private String username;
     private LocalDate referralDate;
+
+    @OneToOne
+    @JsonBackReference
+    @JoinColumn(name = "referredRoommate")
+    private Roommate roommate;
 
 
 

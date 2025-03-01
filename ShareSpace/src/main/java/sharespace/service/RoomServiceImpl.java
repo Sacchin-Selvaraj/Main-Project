@@ -96,8 +96,12 @@ public class RoomServiceImpl implements RoomService {
         String encrpytedPassword=passwordUtils.encrypt(roommate.getPassword());
         roommate.setPassword(encrpytedPassword);
 
+        String referralId=roommate.getReferralId();
+        roommate.setReferralId("");
+        roommateRepo.save(roommate);
+
         if(roommate.getReferralId()!=null&&roommate.getReferralId().length()>5)
-            referralProcess(roommate);
+            referralProcess(referralId,roommate);
 
         if (roommate.getWithFood()) {
             roommate.setRentAmount(room.getPrice());
@@ -118,9 +122,8 @@ public class RoomServiceImpl implements RoomService {
 
     }
 
-    public void referralProcess(Roommate roommate) {
+    public void referralProcess(String referralId,Roommate roommate) {
 
-        String referralId = roommate.getReferralId();
         Roommate referredRoommate=roommateRepo.findByReferralId(referralId);
         if(referredRoommate==null)
             throw new RoommateException("No Roommate matches with the entered Referral ID");
@@ -134,6 +137,7 @@ public class RoomServiceImpl implements RoomService {
         ReferralDetails referralDetails=new ReferralDetails();
         referralDetails.setUsername(roommate.getUsername());
         referralDetails.setReferralDate(LocalDate.now());
+        referralDetails.setRoommate(roommate);
 
         referredRoommate.getReferralDetailsList().add(referralDetails);
         roommateRepo.save(referredRoommate);
