@@ -61,7 +61,7 @@ public class RoomServiceImpl implements RoomService {
         if (roomList.isEmpty())
             throw new RoomException("No Rooms are Added in the System");
         List<Room> matchingRooms = new ArrayList<>();
-        int capacity = 0;
+        int capacity;
         for (Room room : roomList) {
             capacity = room.getCapacity() - room.getCurrentCapacity();
             if (available.getRoomType().equalsIgnoreCase(room.getRoomType()) &&
@@ -93,10 +93,10 @@ public class RoomServiceImpl implements RoomService {
 
 
         roommate.setRoommateUniqueId(generateRoommateUniqueNumber(roommate.getUsername()));
-        checkUsername(roommate);// check for the Username and Email is already present or not
+        checkUsername(roommate);
 
-        String encrpytedPassword = passwordUtils.encrypt(roommate.getPassword());
-        roommate.setPassword(encrpytedPassword);
+        String encryptedPassword = passwordUtils.encrypt(roommate.getPassword());
+        roommate.setPassword(encryptedPassword);
 
         if (roommate.getReferralId() != null && roommate.getReferralId().length() > 5)
             referralProcess(roommate);
@@ -119,6 +119,7 @@ public class RoomServiceImpl implements RoomService {
 
     }
 
+    @Transactional
     public void referralProcess(Roommate roommate) {
 
         Roommate referredRoommate = roommateRepo.findByReferralId(roommate.getReferralId());
@@ -161,18 +162,25 @@ public class RoomServiceImpl implements RoomService {
 
 
     @Override
+    @Transactional
     public String addRooms(Room room) {
         if (room == null)
             throw new RoomException("Invalid Room Details");
-
         if (checkRoomNumberExists(room.getRoomNumber()))
-            throw new RoomException("Already this room number exists");
+            throw new RoomException("Already this Room number : "+room.getRoomNumber()+" was taken");
+        if (room.getCapacity()<=0)
+            throw new RoomException("Total Capacity must be greater than 0. Provided: " + room.getCapacity());
+        if (room.getCurrentCapacity()>room.getCapacity())
+            throw new RoomException("Current capacity cannot be more than total capacity");
+        if (room.getPrice()<1000)
+            throw new RoomException("Room rent should be more than 1000");
 
         roomRepo.save(room);
         return "Room have been added Successfully";
     }
 
     @Override
+    @Transactional
     public Room editRoom(int roomId, Room room) {
         if (room == null)
             throw new RoomException("Invalid Room Details");
@@ -206,6 +214,18 @@ public class RoomServiceImpl implements RoomService {
         }
 
         return roomRepo.save(roomFromDatabase);
+    }
+
+    @Override
+    @Transactional
+    public String deleteRoom(int roomId) {
+        Room room=roomRepo.findById(roomId).orElseThrow(() ->
+                new RoomException("Mentioned Room Id is not available"));
+        if (!room.getRoommateList().isEmpty())
+            throw new RoomException("This room is not empty to delete");
+
+        roomRepo.delete(room);
+        return "Room deleted Successfully";
     }
 
     public Boolean checkRoomNumberExists(String roomNumber) {

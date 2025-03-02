@@ -21,7 +21,6 @@ public class OwnerServiceImpl implements OwnerService{
     @Override
     public String verifyOwnerDetails(OwnerDetails ownerDetails) {
 
-        System.out.println(ownerDetails.getOwnerName());
         OwnerDetails ownerDetailsFromDatabase=ownerRepo.findByOwnerName(ownerDetails.getOwnerName());
         if (ownerDetailsFromDatabase==null)
             throw new OwnerException("Owner username is invalid");

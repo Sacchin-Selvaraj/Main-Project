@@ -20,4 +20,6 @@ public interface RoomService {
     String addRooms(Room room);
 
     Room editRoom(int roomId,Room room);
+
+    String deleteRoom(int roomId);
 }

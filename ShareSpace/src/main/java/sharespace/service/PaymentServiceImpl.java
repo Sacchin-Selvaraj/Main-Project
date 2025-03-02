@@ -1,5 +1,6 @@
 package sharespace.service;
 
+import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -42,20 +43,21 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
+    @Transactional
     public PaymentCallBackRequest createPaymentForUser(String username) throws RazorpayException {
-        System.out.println(username);
+        if (username == null || username.isEmpty()) {
+            throw new RoommateException("Username cannot be null or empty");
+        }
         Roommate roommate = roommateRepo.findByUsername(username);
-
         if (roommate == null)
-            throw new RoommateException("No User found under this name");
+            throw new RoommateException("No User found under this name : "+username);
 
         Payment payment = new Payment();
         payment = createPayment(roommate.getRentAmount(), "INR", roommate.getUsername(), payment);
         roommate.setRentStatus(RentStatus.PAYMENT_CREATED);
-        roommate.getPaymentList().add(payment); // Circular Reference
+        roommate.getPaymentList().add(payment);
         payment.setUsername(roommate.getUsername());
         payment.setRoomNumber(roommate.getRoomNumber());
-        paymentRepo.save(payment);
         roommateRepo.save(roommate);
 
         PaymentCallBackRequest response=new PaymentCallBackRequest();
@@ -73,31 +75,26 @@ public class PaymentServiceImpl implements PaymentService {
         orderRequest.put("amount", amount * 100);
         orderRequest.put("currency", currency);
         orderRequest.put("receipt", receipt);
-        System.out.println(orderRequest.toString());
         Order order = razorpayClient.orders.create(orderRequest);
 
         int amountPaid = (int) order.get("amount");
-        double rent = (double) amountPaid;
         payment.setTransactionId(order.get("id"));
         payment.setPaymentStatus("PAYMENT_FAILED");
-        payment.setAmount(rent/100);
+        payment.setAmount((double) amountPaid /100);
         payment.setPaymentDate(LocalDate.now());
         payment.setPaymentMethod(order.get("entity"));
-
-        System.out.println(order.toString());
 
         return payment;
     }
 
 
     @Override
+    @Transactional
     public String updateStatus(PaymentCallBackRequest request) throws RazorpayException {
         String razorOrderId = request.getOrderId();
         RazorpayClient razorpayClient=new RazorpayClient(apiKey,apiSecret);
         com.razorpay.Payment paymentData =razorpayClient.payments.fetch(request.getPaymentId());
-        System.out.println(paymentData.toString());
         if(!request.getPaymentId().equals(paymentData.get("id"))){
-            System.out.println("Payment was not Processed with correct Order Id");
             throw new PaymentException("Payment was not Processed with correct Order Id");
         }
         Payment payment = paymentRepo.findBytransactionId(razorOrderId);
@@ -132,6 +129,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
+    @Transactional
     public Page<Payment> sortPayments(Integer page, Integer limit, LocalDate paymentDate, String sortField, String sortOrder) {
         Sort sort=sortOrder.equalsIgnoreCase("asc")?Sort.by(sortField).ascending():Sort.by(sortField).descending();
 

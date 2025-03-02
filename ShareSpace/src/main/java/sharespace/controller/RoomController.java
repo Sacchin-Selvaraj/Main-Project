@@ -40,7 +40,7 @@ public class RoomController {
     }
 
     @PostMapping("/check-availability")
-    public ResponseEntity<List<Room>> checkAvailabilty(@RequestBody AvailabilityCheck available){
+    public ResponseEntity<List<Room>> checkAvailability (@RequestBody AvailabilityCheck available){
         List<Room> room=roomService.checkAvailability(available);
         return new ResponseEntity<>(room,HttpStatus.OK);
     }
@@ -56,13 +56,18 @@ public class RoomController {
         log.info("Adding Room into DB");
         String response=roomService.addRooms(room);
         return new ResponseEntity<>(response,HttpStatus.OK);
-
     }
 
     @PatchMapping("/edit-room/{roomId}")
     public ResponseEntity<Room> editRoom(@PathVariable int roomId,@RequestBody Room room){
         Room room1=roomService.editRoom(roomId,room);
         return new ResponseEntity<>(room1,HttpStatus.OK);
+    }
+
+    @DeleteMapping("/delete-room/{roomId}")
+    public ResponseEntity<String> deleteRoom(@PathVariable int roomId){
+        String message=roomService.deleteRoom(roomId);
+        return new ResponseEntity<>(message,HttpStatus.OK);
     }
 
 

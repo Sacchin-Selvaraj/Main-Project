@@ -27,7 +27,7 @@ public class NotificationController {
         return new ResponseEntity<>(mailResponse, HttpStatus.OK);
     }
 
-    @GetMapping("/send-rentpending")
+    @GetMapping("/send-rent-pending")
     public ResponseEntity<MailResponse> sendPaymentPendingNotification(){
 
         return new ResponseEntity<>(notificationService.sendPendingMail(),HttpStatus.OK);

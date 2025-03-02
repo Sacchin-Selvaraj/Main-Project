@@ -82,7 +82,7 @@ class RoomControllerTest {
 
         when(roomService.checkAvailability(availabilityCheck)).thenReturn(availableRooms);
 
-        ResponseEntity<List<Room>> response = roomController.checkAvailabilty(availabilityCheck);
+        ResponseEntity<List<Room>> response = roomController.checkAvailability(availabilityCheck);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(2, response.getBody().size());

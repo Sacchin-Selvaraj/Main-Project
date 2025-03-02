@@ -7,7 +7,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import sharespace.exception.RoomException;
 import sharespace.exception.RoommateException;
 import sharespace.model.*;
 import sharespace.password.PasswordUtils;
@@ -54,12 +53,14 @@ public class RoommateServiceImpl implements RoommateService {
 
     @Override
     public Roommate updateEmail(int id, String email) {
+        if (email == null || email.isEmpty()) {
+            throw new RoommateException("Email cannot be null or empty");
+        }
         Roommate roommate = roommateRepo.findById(id)
                 .orElseThrow(() -> new RoommateException("Roommate not found with id " + id));
         roommate.setEmail(email);
         return roommateRepo.save(roommate);
     }
-
 
     @Transactional
     public Roommate updateRoommate(int id, Roommate roommate) {
@@ -104,9 +105,6 @@ public class RoommateServiceImpl implements RoommateService {
         String roomNumber = roommate.getRoomNumber();
 
         Room room = roomRepo.findByRoomNumber(roomNumber);
-        System.out.println(room.getRoomNumber());
-        if (room == null)
-            throw new RoomException("Entered RoomNumber is invalid");
 
         room.setCurrentCapacity(room.getCurrentCapacity() - 1);
         room.getRoommateList().remove(roommate);
@@ -191,16 +189,10 @@ public class RoommateServiceImpl implements RoommateService {
                     mapper.map(src -> src.getRoommate().getRoomNumber(), VacateResponseDTO::setRoomNumber);
                 });
 
-        // Map VacateRequest to VacateResponseDTO using modelMapper
         List<VacateResponseDTO> vacateResponseDTOS = vacateRequests.stream()
                 .map(vacateRequest -> {
-                    // Map the VacateRequest to VacateResponseDTO
                     VacateResponseDTO dto = modelMapper.map(vacateRequest, VacateResponseDTO.class);
-
-                    // Set the createdAt field to the current date and time
                     dto.setCreatedAt(LocalDateTime.now());
-
-                    // Return the DTO
                     return dto;
                 })
                 .toList();
@@ -209,6 +201,7 @@ public class RoommateServiceImpl implements RoommateService {
     }
 
     @Override
+    @Transactional
     public void markAsRead(int requestId) {
         VacateRequest vacateRequest = vacateRepo.findById(requestId)
                 .orElseThrow(() -> new RoommateException("Vacate request not found"));

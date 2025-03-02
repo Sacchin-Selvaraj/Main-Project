@@ -1,5 +1,6 @@
 package sharespace.service;
 
+import jakarta.transaction.Transactional;
 import sharespace.exception.GrievanceException;
 import sharespace.exception.RoommateException;
 import sharespace.model.Grievances;
@@ -30,6 +31,7 @@ public class GrievanceServiceImpl implements GrievanceService {
 
 
     @Override
+    @Transactional
     public String raiseAnGrievance(int roommateId, Grievances grievance) {
         if(grievance==null)
             throw new GrievanceException("Invalid data in Grievance");
@@ -42,8 +44,8 @@ public class GrievanceServiceImpl implements GrievanceService {
         return "Raised an Grievance Successfully";
     }
 
-
     @Override
+    @Transactional
     public List<GrievancesDTO> getPendingGrievances() {
         List<Grievances> grievances=grievanceRepo.findByIsReadFalse();
 
@@ -66,6 +68,7 @@ public class GrievanceServiceImpl implements GrievanceService {
     }
 
     @Override
+    @Transactional
     public String markPendingGrievances(int grievanceId) {
         Grievances grievance=grievanceRepo.findById(grievanceId).orElseThrow(() -> new GrievanceException("Entered Grievance Id was invalid"));
         grievance.setIsRead(true);
