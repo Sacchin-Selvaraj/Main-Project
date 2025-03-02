@@ -22,8 +22,6 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 
-import static sharespace.model.RentStatus.*;
-
 @Configuration
 @Component
 @EnableScheduling
@@ -45,7 +43,6 @@ public class RoomConfig implements CommandLineRunner {
 
     @Bean
     public ModelMapper modelMapper() {
-
         return new ModelMapper();
     }
 
@@ -96,6 +93,5 @@ public class RoomConfig implements CommandLineRunner {
         factoryBean.setTemplateLoaderPath("classpath:/templates");
         return factoryBean;
     }
-
 
 }

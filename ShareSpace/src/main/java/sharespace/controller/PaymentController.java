@@ -4,13 +4,11 @@ import org.springframework.data.domain.Page;
 import sharespace.model.Payment;
 import sharespace.model.PaymentCallBackRequest;
 import sharespace.model.PaymentDetails;
-import sharespace.model.RentStatus;
 import sharespace.service.PaymentService;
 import com.razorpay.RazorpayException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import sharespace.service.PaymentServiceImpl;
 
 import java.time.LocalDate;
 import java.util.List;

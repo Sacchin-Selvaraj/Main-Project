@@ -21,7 +21,7 @@ public class Grievances {
     private LocalDate createdAt;
     private Boolean isRead;
 
-    @ManyToOne(cascade = {CascadeType.PERSIST,CascadeType.MERGE})
+    @ManyToOne
     @JoinColumn(name = "roommateId")
     @JsonBackReference
     private Roommate roommate;

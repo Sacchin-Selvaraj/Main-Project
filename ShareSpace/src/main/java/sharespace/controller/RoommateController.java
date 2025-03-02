@@ -2,7 +2,6 @@ package sharespace.controller;
 
 import org.springframework.data.domain.Page;
 import sharespace.model.*;
-import sharespace.payload.RoommateDTO;
 import sharespace.payload.VacateResponseDTO;
 import sharespace.service.RoommateService;
 import jakarta.validation.Valid;

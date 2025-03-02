@@ -9,6 +9,7 @@ import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -49,6 +50,7 @@ public class Roommate {
     @OneToMany(fetch = FetchType.LAZY,cascade = CascadeType.ALL,orphanRemoval = true)
     private List<ReferralDetails> referralDetailsList=new ArrayList<>();
 
+    @ToString.Exclude
     @OneToMany(mappedBy = "roommate",fetch = FetchType.LAZY,cascade = CascadeType.ALL,orphanRemoval = true)
     @JsonManagedReference
     private List<Grievances> grievances=new ArrayList<>();

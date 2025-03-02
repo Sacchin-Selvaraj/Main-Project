@@ -85,6 +85,5 @@ public class GrievanceController {
             return new ResponseEntity<>("Failed to mark grievance as read", HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-
     }
 }

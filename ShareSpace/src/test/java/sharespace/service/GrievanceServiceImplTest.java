@@ -59,7 +59,7 @@ class GrievanceServiceImplTest {
 
         assertEquals("Raised an Grievance Successfully", response);
         verify(roommateRepository, times(1)).findById(roommateId);
-        verify(grievanceRepository, times(1)).save(grievance);
+        verify(grievanceRepository, never()).save(any());
         verify(roommateRepository, times(1)).save(roommate);
 
     }
