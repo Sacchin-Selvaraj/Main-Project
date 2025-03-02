@@ -160,7 +160,6 @@ public class RoomServiceImpl implements RoomService {
         }
     }
 
-
     @Override
     @Transactional
     public String addRooms(Room room) {
@@ -169,7 +168,7 @@ public class RoomServiceImpl implements RoomService {
         if (checkRoomNumberExists(room.getRoomNumber()))
             throw new RoomException("Already this Room number : "+room.getRoomNumber()+" was taken");
         if (room.getCapacity()<=0)
-            throw new RoomException("Total Capacity must be greater than 0. Provided: " + room.getCapacity());
+            throw new RoomException("Total Capacity must be greater than 0. Provided : " + room.getCapacity());
         if (room.getCurrentCapacity()>room.getCapacity())
             throw new RoomException("Current capacity cannot be more than total capacity");
         if (room.getPrice()<1000)
@@ -201,6 +200,8 @@ public class RoomServiceImpl implements RoomService {
             roomFromDatabase.setFloorNumber(room.getFloorNumber());
         }
         if (room.getCapacity() != null) {
+            if (room.getCapacity()<0)
+                throw new RoomException("Total capacity cannot be less than 0");
             roomFromDatabase.setCapacity(room.getCapacity());
         }
         if (room.getCurrentCapacity() != null) {
