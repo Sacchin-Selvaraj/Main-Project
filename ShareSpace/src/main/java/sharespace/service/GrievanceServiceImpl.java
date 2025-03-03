@@ -1,6 +1,8 @@
 package sharespace.service;
 
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import sharespace.exception.GrievanceException;
 import sharespace.exception.RoommateException;
 import sharespace.model.Grievances;
@@ -22,6 +24,8 @@ public class GrievanceServiceImpl implements GrievanceService {
     private final RoommateRepository roommateRepo;
 
     private final ModelMapper modelMapper;
+
+
 
     public GrievanceServiceImpl(GrievanceRepository grievanceRepo, RoommateRepository roommateRepo, ModelMapper modelMapper) {
         this.grievanceRepo = grievanceRepo;
