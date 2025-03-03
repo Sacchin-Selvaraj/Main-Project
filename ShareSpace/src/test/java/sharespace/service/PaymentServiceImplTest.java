@@ -43,7 +43,7 @@ class PaymentServiceImplTest {
         RoommateException exception = assertThrows(RoommateException.class, () -> {
             paymentService.createPaymentForUser(username);
         });
-        assertEquals("No User found under this name", exception.getMessage());
+        assertEquals("No User found under this name : invalidUser", exception.getMessage());
         verify(roommateRepo, times(1)).findByUsername(username);
         verify(paymentRepo, never()).save(any(Payment.class));
         verify(roommateRepo, never()).save(any(Roommate.class));

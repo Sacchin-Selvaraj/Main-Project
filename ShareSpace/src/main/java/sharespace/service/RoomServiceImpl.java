@@ -82,10 +82,8 @@ public class RoomServiceImpl implements RoomService {
 
         Room room = roomRepo.findById(roomId).orElseThrow(() -> new RoomException("Mentioned Room ID is not available"));
 
-        if (roommate.getCheckOutDate() != null) {
-            if (roommate.getCheckOutDate().isBefore(LocalDate.now())) {
-                throw new RoomException("Check out date can't be entered in past");
-            }
+        if (roommate.getCheckOutDate() != null&&roommate.getCheckOutDate().isBefore(LocalDate.now())) {
+            throw new RoomException("Checkout date can't be entered as past date");
         }
 
         if (Objects.equals(room.getCapacity(), room.getCurrentCapacity()))

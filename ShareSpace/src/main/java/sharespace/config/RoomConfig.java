@@ -3,6 +3,10 @@ package sharespace.config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpMethod;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import sharespace.model.OwnerDetails;
 import sharespace.model.Payment;
 import sharespace.model.Room;
@@ -31,16 +35,31 @@ public class RoomConfig implements CommandLineRunner {
 
     private final RoomRepository roomRepository;
 
-    @Autowired
-    private PaymentRepository paymentRepo;
+    private final PaymentRepository paymentRepo;
+
+    @Value("${frontend.url}")
+    private String frontendUrl;
 
     private static final Logger logger= LoggerFactory.getLogger(RoomConfig.class);
 
-    public RoomConfig(OwnerServiceImpl ownerService, RoomRepository roomRepository) {
+    public RoomConfig(OwnerServiceImpl ownerService, RoomRepository roomRepository, PaymentRepository paymentRepo) {
         this.ownerService = ownerService;
         this.roomRepository = roomRepository;
+        this.paymentRepo = paymentRepo;
     }
-
+    @Bean
+    public WebMvcConfigurer corsConfigurer() {
+        return new WebMvcConfigurer() {
+            @Override
+            public void addCorsMappings(CorsRegistry registry) {
+                registry.addMapping("/**")
+                        .allowedOriginPatterns(frontendUrl)
+                        .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+                        .allowedHeaders("*")
+                        .allowCredentials(true);
+            }
+        };
+    }
     @Bean
     public ModelMapper modelMapper() {
         return new ModelMapper();

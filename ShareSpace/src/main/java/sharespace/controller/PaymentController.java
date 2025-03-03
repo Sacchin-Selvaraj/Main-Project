@@ -14,7 +14,6 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@CrossOrigin
 @RequestMapping("/payments")
 public class PaymentController {
 
@@ -27,7 +26,6 @@ public class PaymentController {
 
     @PostMapping("/payrent")
     public ResponseEntity<PaymentCallBackRequest> payRent(@RequestBody PaymentDetails paymentDetails) throws RazorpayException {
-        System.out.println(paymentDetails.getUsername());
         PaymentCallBackRequest payment=paymentService.createPaymentForUser(paymentDetails.getUsername());
         return new ResponseEntity<>(payment, HttpStatus.OK);
     }

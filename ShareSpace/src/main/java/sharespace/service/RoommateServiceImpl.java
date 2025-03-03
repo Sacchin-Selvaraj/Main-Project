@@ -41,7 +41,6 @@ public class RoommateServiceImpl implements RoommateService {
         this.modelMapper = modelMapper;
     }
 
-
     @Override
     public List<Roommate> getAllRoommates() {
         List<Roommate> roommateList = roommateRepo.findAll();

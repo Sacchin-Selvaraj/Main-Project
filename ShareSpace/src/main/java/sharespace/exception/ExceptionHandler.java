@@ -72,14 +72,14 @@ public class ExceptionHandler {
     public ResponseEntity<APIResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
         List<String> fieldname=new ArrayList<>();
-        ex.getBindingResult().getAllErrors().forEach((error) -> {
+        ex.getBindingResult().getAllErrors().forEach(error -> {
             String fieldName = ((FieldError) error).getField();
             String errorMessage = error.getDefaultMessage();
             errors.put(fieldName, errorMessage);
             fieldname.add(fieldName);
         });
         String message;
-        if (fieldname.getFirst().equalsIgnoreCase("username"))
+        if (fieldname.get(0).equalsIgnoreCase("username"))
             message=errors.get("username");
         else
            message=errors.get("password");
