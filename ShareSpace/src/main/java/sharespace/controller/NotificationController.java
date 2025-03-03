@@ -33,12 +33,13 @@ public class NotificationController {
 
     @GetMapping("/send-rent-pending")
     public ResponseEntity<MailResponse> sendPaymentPendingNotification(){
-
+        logger.info("received an request to sent mail to payment pending roommates");
         return new ResponseEntity<>(notificationService.sendPendingMail(),HttpStatus.OK);
     }
 
     @GetMapping("/load")
     public MailResponse sendmailAutomatically(){
+        logger.info("Automatically triggered the mail");
         return notificationService.sendMailToRoommateAutomatically();
 
     }
