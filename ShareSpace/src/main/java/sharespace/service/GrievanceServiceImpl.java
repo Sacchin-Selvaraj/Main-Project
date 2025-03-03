@@ -19,20 +19,17 @@ import java.util.List;
 @Service
 public class GrievanceServiceImpl implements GrievanceService {
 
+
+
     private final GrievanceRepository grievanceRepo;
-
     private final RoommateRepository roommateRepo;
-
     private final ModelMapper modelMapper;
-
-
 
     public GrievanceServiceImpl(GrievanceRepository grievanceRepo, RoommateRepository roommateRepo, ModelMapper modelMapper) {
         this.grievanceRepo = grievanceRepo;
         this.roommateRepo = roommateRepo;
         this.modelMapper = modelMapper;
     }
-
 
     @Override
     @Transactional
