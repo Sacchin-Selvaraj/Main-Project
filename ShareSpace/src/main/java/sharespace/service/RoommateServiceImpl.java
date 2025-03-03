@@ -219,6 +219,7 @@ public class RoommateServiceImpl implements RoommateService {
                     mapper.map(src -> src.getRoommate().getRoomNumber(), VacateResponseDTO::setRoomNumber);
                 });
 
+        log.info("Fetched pending vacate requests");
         return vacateRequests.stream()
                 .map(vacateRequest -> {
                     VacateResponseDTO dto = modelMapper.map(vacateRequest, VacateResponseDTO.class);
@@ -231,9 +232,14 @@ public class RoommateServiceImpl implements RoommateService {
     @Override
     @Transactional
     public void markAsRead(int requestId) {
+        log.info("Marking vacate request as read with Id: {}", requestId);
         VacateRequest vacateRequest = vacateRepo.findById(requestId)
-                .orElseThrow(() -> new RoommateException("Vacate request not found"));
+                .orElseThrow(() -> {
+                    log.error("Vacate request not found with Id: {}", requestId);
+                    return new RoommateException("Vacate request not found");
+                });
         vacateRepo.delete(vacateRequest);
+        log.info("Vacate request marked as read and deleted with Id: {}", requestId);
     }
 
     @Override
@@ -247,9 +253,11 @@ public class RoommateServiceImpl implements RoommateService {
         }else {
             roommatePage=roommateRepo.findByRentStatus(rentStatus,pageable);
         }
-        if (roommatePage.isEmpty())
+        if (roommatePage.isEmpty()) {
+            log.warn("No roommates found with the given criteria");
             throw new RoommateException("No Roommates available");
-
+        }
+        log.info("Fetched {} roommates details", roommatePage.getTotalElements());
         return roommatePage;
     }
 

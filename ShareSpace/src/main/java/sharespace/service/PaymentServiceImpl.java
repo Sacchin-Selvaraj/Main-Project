@@ -1,6 +1,8 @@
 package sharespace.service;
 
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -26,10 +28,10 @@ import java.util.List;
 @Service
 public class PaymentServiceImpl implements PaymentService {
 
+    private static final Logger log = LoggerFactory.getLogger(PaymentServiceImpl.class);
+
     private final RoommateRepository roommateRepo;
-
     private final PaymentRepository paymentRepo;
-
 
     @Value("${razorpay.api.key}")
     private String apiKey;
@@ -45,13 +47,16 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     @Transactional
     public PaymentCallBackRequest createPaymentForUser(String username) throws RazorpayException {
+        log.info("Creating payment for user: {}", username);
         if (username == null || username.isEmpty()) {
+            log.error("Username cannot be null or empty");
             throw new RoommateException("Username cannot be null or empty");
         }
         Roommate roommate = roommateRepo.findByUsername(username);
-        if (roommate == null)
-            throw new RoommateException("No User found under this name : "+username);
-
+        if (roommate == null) {
+            log.error("No user found with username: {}", username);
+            throw new RoommateException("No User found under this name : " + username);
+        }
         Payment payment = new Payment();
         payment = createPayment(roommate.getRentAmount(), "INR", roommate.getUsername(), payment);
         roommate.setRentStatus(RentStatus.PAYMENT_CREATED);
@@ -59,6 +64,8 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setUsername(roommate.getUsername());
         payment.setRoomNumber(roommate.getRoomNumber());
         roommateRepo.save(roommate);
+
+        log.info("Payment created successfully for user: {}", username);
 
         PaymentCallBackRequest response=new PaymentCallBackRequest();
         response.setOrderId(payment.getTransactionId());
@@ -84,6 +91,7 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setPaymentDate(LocalDate.now());
         payment.setPaymentMethod(order.get("entity"));
 
+        log.debug("Payment created with orderId: {}", payment.getTransactionId());
         return payment;
     }
 
@@ -91,41 +99,53 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     @Transactional
     public String updateStatus(PaymentCallBackRequest request) throws RazorpayException {
+        log.info("Updating payment status for order Id: {}", request.getOrderId());
         String razorOrderId = request.getOrderId();
         RazorpayClient razorpayClient=new RazorpayClient(apiKey,apiSecret);
         com.razorpay.Payment paymentData =razorpayClient.payments.fetch(request.getPaymentId());
         if(!request.getPaymentId().equals(paymentData.get("id"))){
+            log.error("Payment was not processed with correct order ID: {}", request.getOrderId());
             throw new PaymentException("Payment was not Processed with correct Order Id");
         }
         Payment payment = paymentRepo.findBytransactionId(razorOrderId);
+        if (payment == null) {
+            log.error("Payment not found for transaction Id: {}", razorOrderId);
+            throw new PaymentException("Payment not found");
+        }
         String userName=payment.getUsername();
         Roommate roommate=roommateRepo.findByUsername(userName);
         roommate.setRentStatus(RentStatus.PAYMENT_DONE);
         roommateRepo.save(roommate);
-        if (payment != null) {
-            payment.setPaymentStatus("PAYMENT_DONE");
-            payment.setTransactionId(request.getPaymentId());
-            payment.setPaymentMethod(paymentData.get("method"));
-            paymentRepo.save(payment);
-            return "Payment is Successful";
 
-        }
+        payment.setPaymentStatus("PAYMENT_DONE");
+        payment.setTransactionId(request.getPaymentId());
+        payment.setPaymentMethod(paymentData.get("method"));
+        paymentRepo.save(payment);
+
+        log.info("Payment status updated successfully for order Id: {}", request.getOrderId());
         return "Payment not Successful";
 
     }
 
     @Override
     public List<Payment> getAllPayments() {
-        List<Payment> paymentList=paymentRepo.findAll();
-        if (paymentList.isEmpty())
+        log.info("Fetching all payments");
+        List<Payment> paymentList = paymentRepo.findAll();
+        if (paymentList.isEmpty()) {
+            log.warn("No payments found in the system");
             throw new PaymentException("No Payments have been done so far");
+        }
 
+        log.info("Fetched {} payments", paymentList.size());
         return paymentList;
     }
 
     @Override
     public Payment addPayment(Payment payment) {
-        return paymentRepo.save(payment);
+        log.info("Adding new payment: {}", payment);
+        Payment savedPayment = paymentRepo.save(payment);
+        log.info("Payment added successfully with transaction ID: {}", savedPayment.getTransactionId());
+        return savedPayment;
     }
 
     @Override
@@ -141,9 +161,12 @@ public class PaymentServiceImpl implements PaymentService {
         }else {
             paymentPage=paymentRepo.findByPaymentDate(paymentDate,pageable);
         }
-        if (paymentPage.isEmpty())
+        if (paymentPage.isEmpty()) {
+            log.warn("No payments found with the given criteria");
             throw new PaymentException("No Payment available ");
+        }
 
+        log.info("Fetched {} payment Details", paymentPage.getTotalElements());
         return paymentPage;
     }
 
@@ -155,9 +178,11 @@ public class PaymentServiceImpl implements PaymentService {
         }else {
             paymentList = paymentRepo.findAllByUsername(username);
         }
-        if (paymentList.isEmpty())
-            throw new PaymentException("No Payments available under - "+username);
-
+        if (paymentList.isEmpty()) {
+            log.warn("No payments found for username: {}", username);
+            throw new PaymentException("No Payments available under - " + username);
+        }
+        log.info("Fetched {} payments for username: {}", paymentList.size(), username);
         return paymentList;
     }
 

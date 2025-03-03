@@ -24,15 +24,11 @@ import java.util.UUID;
 public class RoomServiceImpl implements RoomService {
 
     private final RoomRepository roomRepo;
-
     private final RoommateRepository roommateRepo;
-
     private final ModelMapper mapper;
-
     private final PasswordUtils passwordUtils;
 
     private static final Logger log = LoggerFactory.getLogger(RoomServiceImpl.class);
-
 
     public RoomServiceImpl(RoomRepository roomRepo, RoommateRepository roommateRepo, ModelMapper mapper, PasswordUtils passwordUtils) {
         this.roomRepo = roomRepo;
