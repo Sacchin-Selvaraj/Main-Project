@@ -10,11 +10,14 @@ import sharespace.exception.RoomException;
 import sharespace.exception.RoommateException;
 import sharespace.model.*;
 import sharespace.password.PasswordUtils;
+import sharespace.payload.RoomDTO;
 import sharespace.payload.RoommateDTO;
 import sharespace.repository.RoomRepository;
 import sharespace.repository.RoommateRepository;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -38,33 +41,27 @@ public class RoomServiceImpl implements RoomService {
     }
 
     @Override
-    public List<Room> getAllRoomDetails() {
-        log.info("Fetching all rooms from the database");
+    public List<RoomDTO> getAllRoomDetails() {
         List<Room> roomList = roomRepo.findAll();
 
         if (roomList.isEmpty()) {
-            log.warn("No rooms found in the system");
             throw new RoomException("No Rooms are Added in the System");
         }
         log.info("Successfully fetched {} rooms", roomList.size());
-        return roomList;
+        return roomList.stream().map(room -> mapper.map(room,RoomDTO.class)).toList();
     }
 
     @Override
-    public Room getRoomById(int roomId) {
-        log.info("Fetching room by Id: {}", roomId);
-        return roomRepo.findById(roomId).orElseThrow(() ->{
-            log.error("Room not found with Id: {}", roomId);
-            return new RoomException("Mentioned Room Id is not available");
-        });
+    public RoomDTO getRoomById(int roomId) {
+        Room room=roomRepo.findById(roomId).orElseThrow(() -> new RoomException("Mentioned Room Id is not available"));
+
+        return mapper.map(room,RoomDTO.class);
     }
 
     @Override
-    public List<Room> checkAvailability(AvailabilityCheck available) {
-        log.info("Checking room availability for: {}", available.getRoomType());
+    public List<RoomDTO> checkAvailability(AvailabilityCheck available) {
         List<Room> roomList = roomRepo.findAll();
         if (roomList.isEmpty()) {
-            log.warn("No rooms found in the Server");
             throw new RoomException("No Rooms are Added in the System");
         }
         List<Room> matchingRooms = new ArrayList<>();
@@ -78,68 +75,78 @@ public class RoomServiceImpl implements RoomService {
             }
         }
         if (matchingRooms.isEmpty()) {
-            log.warn("No rooms matching the condition");
             throw new RoomException("Rooms are not available with your Condition");
         }
         log.info("Found {} matching rooms", matchingRooms.size());
-        return matchingRooms;
+        return matchingRooms.stream().map(room -> mapper.map(room,RoomDTO.class)).toList();
     }
 
     @Override
     @Transactional
     public RoommateDTO bookRoom(int roomId, Roommate roommate) {
-        log.info("Attempting to book room with Id: {} for roommate: {}", roomId, roommate.getUsername());
         Room room = roomRepo.findById(roomId).orElseThrow(() -> new RoomException("Mentioned Room ID is not available"));
 
-        if (roommate.getCheckOutDate() != null&&roommate.getCheckOutDate().isBefore(LocalDate.now())) {
-            log.error("Invalid checkout date: {}", roommate.getCheckOutDate());
+        if (roommate.getCheckOutDate() != null && roommate.getCheckOutDate().isBefore(LocalDate.now())) {
             throw new RoomException("Checkout date can't be entered as past date");
         }
 
         if (Objects.equals(room.getCapacity(), room.getCurrentCapacity())) {
-            log.error("Room is full with ID: {}", roomId);
             throw new RoomException("Room was Full");
         }
 
         roommate.setRoommateUniqueId(generateRoommateUniqueNumber(roommate.getUsername()));
-        log.info("checkUsername and Email already exists or not");
         checkUsernameEmail(roommate);
 
         String encryptedPassword = passwordUtils.encrypt(roommate.getPassword());
         roommate.setPassword(encryptedPassword);
 
-        log.info("Checking for the valid referral");
         if (roommate.getReferralId() != null && roommate.getReferralId().length() > RoomConstants.REFERRAL_LENGTH)
             referralProcess(roommate);
 
-        if (roommate.getWithFood()) {
-            roommate.setRentAmount(room.getPrice());
+        LocalDate fifthDayOfMonth = LocalDate.of(LocalDate.now().getYear(), LocalDate.now().getMonth(), 5);
+        log.info("5th day of the month: {}", fifthDayOfMonth);
+        if (roommate.getCheckInDate().isAfter(fifthDayOfMonth) && roommate.getCheckInDate().getMonth().equals(fifthDayOfMonth.getMonth())) {
+            log.info("Calculating partial rent for check-in after the 5th of the month");
+            roommate.setRentAmount(calculatePartialRentAmount(room.getRoomNumber(), roommate.getCheckInDate(),roommate.getWithFood()));
+
         } else {
-            roommate.setRentAmount(room.getPrice() - RoomConstants.WITHOUT_FOOD);
+            log.info("Setting full rent for check-in on or before the 5th of the month");
+            roommate.setRentAmount(roommate.getWithFood() ? room.getPrice() : room.getPrice() - RoomConstants.WITHOUT_FOOD);
         }
-        roommate.setCheckInDate(LocalDate.now());
+        roommate.setCheckInDate(roommate.getCheckInDate());
+        roommate.setLastModifiedDate(LocalDate.now());
         roommate.setReferralId(generateReferId(roommate.getUsername()));
         roommate.setReferralCount(RoomConstants.NULL_VALUE);
         roommate.setRentStatus(RentStatus.PAYMENT_PENDING);
         roommate.setRoomNumber(room.getRoomNumber());
         room.getRoommateList().add(roommate);
         room.setCurrentCapacity(room.getCurrentCapacity() + 1);
+        roommateRepo.save(roommate);
         roomRepo.save(room);
         log.info("Room booked successfully for roommate: {}", roommate.getUsername());
         return mapper.map(roommate, RoommateDTO.class);
 
     }
 
+    private double calculatePartialRentAmount(String roomNumber, LocalDate checkInDate, boolean withFood) {
+        try {
+            Double perDayRent = roomRepo.findPerDayPrice(roomNumber);
+            LocalDate lastDayOfMonth = checkInDate.with(TemporalAdjusters.lastDayOfMonth());
+            long daysDifference = ChronoUnit.DAYS.between(checkInDate, lastDayOfMonth);
+
+            return withFood? perDayRent * daysDifference:perDayRent * daysDifference-RoomConstants.WITHOUT_FOOD;
+        } catch (Exception e) {
+            throw new RoomException("Error Occurred while calculating Rent Amount ");
+        }
+    }
+
     @Transactional
     public void referralProcess(Roommate roommate) {
-        log.info("Processing referral for roommate: {}", roommate.getUsername());
         Roommate referredRoommate = roommateRepo.findByReferralId(roommate.getReferralId());
         if (referredRoommate == null) {
-            log.error("No roommate found with referral ID: {}", roommate.getReferralId());
             throw new RoommateException("No Roommate matches with the entered Referral ID");
         }
         if (referredRoommate.getReferralCount() > RoomConstants.MAXIMUM_REFERRALS) {
-            log.error("Referral count exceeded for roommate: {}", referredRoommate.getUsername());
             throw new RoommateException("Already " + referredRoommate.getUsername() + " have reached max referrals");
         }
         referredRoommate.setReferralCount(referredRoommate.getReferralCount() + 1);
@@ -167,15 +174,12 @@ public class RoomServiceImpl implements RoomService {
     }
 
     public void checkUsernameEmail(Roommate roommate) {
-        log.info("Checking if username or email already exists for roommate: {}", roommate.getUsername());
         boolean usernameExists = roommateRepo.existsByUsernameIgnoreCase(roommate.getUsername());
         if (usernameExists) {
-            log.error("Username already exists: {}", roommate.getUsername());
             throw new RoomException("Username Already Exists!!!");
         }
         boolean emailExists = roommateRepo.existsByEmailIgnoreCase(roommate.getEmail());
         if (emailExists) {
-            log.error("Email already exists: {}", roommate.getEmail());
             throw new RoomException("Email ID Already Exists!!!");
         }
     }
@@ -183,25 +187,19 @@ public class RoomServiceImpl implements RoomService {
     @Override
     @Transactional
     public String addRooms(Room room) {
-        log.info("Attempting to add a room");
         if (room == null) {
-            log.error("Invalid room details provided");
             throw new RoomException("Invalid Room Details");
         }
         if (checkRoomNumberExists(room.getRoomNumber())) {
-            log.error("Room number already exists: {}", room.getRoomNumber());
             throw new RoomException("Already this Room number : " + room.getRoomNumber() + " was taken");
         }
         if (room.getCapacity() <= RoomConstants.NULL_VALUE) {
-            log.error("Invalid capacity provided: {}", room.getCapacity());
             throw new RoomException("Total Capacity must be greater than 0. Provided : " + room.getCapacity());
         }
         if (room.getCurrentCapacity() > room.getCapacity()) {
-            log.error("Current capacity exceeds total capacity: {}", room.getCurrentCapacity());
             throw new RoomException("Current capacity cannot be more than total capacity");
         }
         if (room.getPrice() < RoomConstants.WITHOUT_FOOD) {
-            log.error("Invalid room price provided: {}", room.getPrice());
             throw new RoomException("Room rent should be more than 1000");
         }
 
@@ -213,14 +211,11 @@ public class RoomServiceImpl implements RoomService {
 
     @Override
     @Transactional
-    public Room editRoom(int roomId, Room room) {
-        log.info("Attempting to edit a room with Id : {}",roomId);
+    public RoomDTO editRoom(int roomId, Room room) {
         if (room == null) {
-            log.error("Invalid room Id provided");
             throw new RoomException("Invalid Room Details");
         }
         Room roomFromDatabase = roomRepo.findById(roomId).orElseThrow(() -> {
-            log.error("Room not found with ID: {}", roomId);
             return new RoomException("No Room found under this " + roomId + " Id");
         });
 
@@ -239,13 +234,12 @@ public class RoomServiceImpl implements RoomService {
             roomFromDatabase.setFloorNumber(room.getFloorNumber());
         }
         if (room.getCapacity() != null) {
-            if (room.getCapacity()<RoomConstants.NULL_VALUE)
-                throw new RoomException("Total capacity cannot be less than 0");
+            if (room.getCapacity() < RoomConstants.NULL_VALUE && room.getCurrentCapacity()<RoomConstants.NULL_VALUE)
+                throw new RoomException("Capacity cannot be less than 0");
             roomFromDatabase.setCapacity(room.getCapacity());
         }
         if (room.getCurrentCapacity() != null) {
             if (room.getCurrentCapacity() > roomFromDatabase.getCapacity()) {
-                log.error("Current capacity exceed total capacity: {}", room.getCurrentCapacity());
                 throw new RoomException("Current capacity cannot exceed total capacity");
             }
             roomFromDatabase.setCurrentCapacity(room.getCurrentCapacity());
@@ -254,17 +248,15 @@ public class RoomServiceImpl implements RoomService {
             roomFromDatabase.setIsAcAvailable(room.getIsAcAvailable());
         }
         log.info("Room updated successfully with ID: {}", roomId);
-        return roomRepo.save(roomFromDatabase);
+        roomRepo.save(roomFromDatabase);
+
+        return mapper.map(roomFromDatabase,RoomDTO.class);
     }
 
     @Override
     @Transactional
     public String deleteRoom(int roomId) {
-        log.info("Attempting to delete room with ID: {}", roomId);
-        Room room=roomRepo.findById(roomId).orElseThrow(() -> {
-            log.error("Room not found with Id : {}", roomId);
-            return new RoomException("Mentioned Room Id is not available");
-        });
+        Room room = roomRepo.findById(roomId).orElseThrow(() -> new RoomException("Mentioned Room Id is not available"));
         if (!room.getRoommateList().isEmpty())
             throw new RoomException("This room is not empty to delete");
 
@@ -274,7 +266,7 @@ public class RoomServiceImpl implements RoomService {
     }
 
     public Boolean checkRoomNumberExists(String roomNumber) {
-        log.debug("Checking if room number exists: {}", roomNumber);
+        log.info("Checking if room number exists: {}", roomNumber);
         return roomRepo.existsByRoomNumber(roomNumber);
     }
 

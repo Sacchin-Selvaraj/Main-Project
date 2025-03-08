@@ -60,7 +60,7 @@ class OwnerServiceImplTest {
         OwnerException exception = assertThrows(OwnerException.class, () -> {
             ownerService.verifyOwnerDetails(ownerDetails);
         });
-        assertEquals("Owner username is invalid", exception.getMessage());
+        assertEquals("Owner name is invalid", exception.getMessage());
         verify(ownerRepo, times(1)).findByOwnerName("invalidOwner");
         verify(passwordUtils, never()).decrypt(any());
     }

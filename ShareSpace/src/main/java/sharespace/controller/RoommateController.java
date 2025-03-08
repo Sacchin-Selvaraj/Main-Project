@@ -67,7 +67,7 @@ public class RoommateController {
     }
 
     @PatchMapping("/update-details/{roommateId}")
-    public ResponseEntity<Roommate> updateDetails(@PathVariable int roommateId,@RequestBody UpdateDetails updateDetails){
+    public ResponseEntity<Roommate> updateDetails(@PathVariable int roommateId,@Valid @RequestBody UpdateDetails updateDetails){
         logger.info("Received an request to update the roommate details for the roommateId {}",roommateId);
         Roommate roommate=roommateService.updateDetails(roommateId,updateDetails);
         logger.info("Successfully updated details for the {}",roommate.getUsername());

@@ -1,23 +1,17 @@
-package sharespace.model;
+package sharespace.payload;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-
 import java.time.LocalDate;
 
-@Entity
-@Table(name = "payments")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class Payment {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class PaymentDTO {
+
     private Long id;
     private Double amount;
     private String paymentStatus;
@@ -26,10 +20,5 @@ public class Payment {
     private String paymentMethod;
     private String username;
     private String roomNumber;
-
-    @ManyToOne
-    @JsonBackReference
-    private Roommate roommate;
-
 
 }

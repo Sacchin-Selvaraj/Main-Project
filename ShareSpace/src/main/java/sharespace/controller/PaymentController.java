@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import sharespace.model.Payment;
 import sharespace.model.PaymentCallBackRequest;
 import sharespace.model.PaymentDetails;
+import sharespace.payload.PaymentDTO;
 import sharespace.service.PaymentService;
 import com.razorpay.RazorpayException;
 import org.springframework.http.HttpStatus;
@@ -60,7 +61,7 @@ public class PaymentController {
     }
 
     @GetMapping("/sort")
-    public ResponseEntity<Page<Payment>> sortPayments(
+    public ResponseEntity<Page<PaymentDTO>> sortPayments(
             @RequestParam(name = "page") Integer page,
             @RequestParam(name = "limit") Integer limit,
             @RequestParam(name = "paymentDate",required = false) LocalDate paymentDate,
@@ -70,7 +71,7 @@ public class PaymentController {
     ){
         logger.info("Received request to sort payments - Page: {}, Limit: {}, Payment Date: {}, Sort Field: {}, Sort Order: {}",
                 page, limit, paymentDate, sortField, sortOrder);
-        Page<Payment> payments=paymentService.sortPayments(page,limit,paymentDate,sortField,sortOrder);
+        Page<PaymentDTO> payments=paymentService.sortPayments(page,limit,paymentDate,sortField,sortOrder);
         logger.info("Sorted {} payment records", payments.getTotalElements());
         return new ResponseEntity<>(payments,HttpStatus.OK);
     }

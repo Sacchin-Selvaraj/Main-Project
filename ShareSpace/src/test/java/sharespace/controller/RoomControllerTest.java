@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import sharespace.model.AvailabilityCheck;
 import sharespace.model.Room;
 import sharespace.model.Roommate;
+import sharespace.payload.RoomDTO;
 import sharespace.payload.RoommateDTO;
 import sharespace.service.RoomService;
 
@@ -28,20 +29,40 @@ class RoomControllerTest {
     @InjectMocks
     private RoomController roomController;
 
+    private RoomDTO roomDTO1;
+    private RoomDTO roomDTO2;
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+
+        roomDTO1=new RoomDTO();
+        roomDTO1.setRoomType("Single Sharing");
+        roomDTO1.setCapacity(1);
+        roomDTO1.setRoomNumber("F1");
+        roomDTO1.setCurrentCapacity(0);
+        roomDTO1.setFloorNumber(1);
+        roomDTO1.setPrice(7000.00);
+        roomDTO1.setPerDayPrice(250.00);
+        roomDTO1.setIsAcAvailable(true);
+
+        roomDTO2=new RoomDTO();
+        roomDTO2.setRoomType("Two Sharing");
+        roomDTO2.setCapacity(2);
+        roomDTO2.setCurrentCapacity(0);
+        roomDTO2.setFloorNumber(2);
+        roomDTO2.setPrice(6000.00);
+        roomDTO2.setPerDayPrice(230.00);
+        roomDTO2.setIsAcAvailable(true);
     }
 
 
     @Test
     void getAllRoom() {
-        Room room1=new Room();
-        Room room2=new Room();
-        List<Room> roomList= Arrays.asList(room1,room2);
+        List<RoomDTO> roomList= Arrays.asList(roomDTO1,roomDTO2);
         when(roomService.getAllRoomDetails()).thenReturn(roomList);
 
-        ResponseEntity<List<Room>> response=roomController.getAllRoom();
+        ResponseEntity<List<RoomDTO>> response=roomController.getAllRoom();
 
         assertEquals(HttpStatus.OK,response.getStatusCode());
         assertEquals(2,response.getBody().size());
@@ -51,17 +72,12 @@ class RoomControllerTest {
 
     @Test
     void getRoom() {
+        when(roomService.getRoomById(1)).thenReturn(roomDTO1);
 
-        Room room = new Room();
-        room.setRoomId(1);
-        room.setRoomNumber("Room 101");
-
-        when(roomService.getRoomById(1)).thenReturn(room);
-
-        ResponseEntity<Room> response = roomController.getRoom(1);
+        ResponseEntity<RoomDTO> response = roomController.getRoom(1);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("Room 101", response.getBody().getRoomNumber());
+        assertEquals("F1", response.getBody().getRoomNumber());
         verify(roomService, times(1)).getRoomById(1);
     }
 
@@ -70,23 +86,15 @@ class RoomControllerTest {
         AvailabilityCheck availabilityCheck = new AvailabilityCheck();
         availabilityCheck.setCapacity(1);
 
-        Room room1 = new Room();
-        room1.setRoomId(1);
-        room1.setRoomNumber("Room 101");
+        List<RoomDTO> roomDTOS=Arrays.asList(roomDTO1,roomDTO2);
 
-        Room room2 = new Room();
-        room2.setRoomId(2);
-        room2.setRoomNumber("Room 102");
+        when(roomService.checkAvailability(availabilityCheck)).thenReturn(roomDTOS);
 
-        List<Room> availableRooms = Arrays.asList(room1, room2);
-
-        when(roomService.checkAvailability(availabilityCheck)).thenReturn(availableRooms);
-
-        ResponseEntity<List<Room>> response = roomController.checkAvailability(availabilityCheck);
+        ResponseEntity<List<RoomDTO>> response = roomController.checkAvailability(availabilityCheck);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(2, response.getBody().size());
-        assertEquals("Room 101", response.getBody().get(0).getRoomNumber());
+        assertEquals("F1", response.getBody().get(0).getRoomNumber());
         verify(roomService, times(1)).checkAvailability(availabilityCheck);
     }
 

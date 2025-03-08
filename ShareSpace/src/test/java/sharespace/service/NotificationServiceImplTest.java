@@ -17,6 +17,8 @@ import sharespace.repository.RoommateRepository;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -42,7 +44,7 @@ class NotificationServiceImplTest {
     }
 
     @Test
-    void SendMailToRoommate_Success() {
+    void SendMailToRoommate_Success() throws ExecutionException, InterruptedException {
         Roommate roommate1 = new Roommate();
         roommate1.setUsername("user1");
         roommate1.setEmail("user1@example.com");
@@ -63,9 +65,9 @@ class NotificationServiceImplTest {
 
         when(templateEngine.process(eq("email-template"), any(Context.class))).thenReturn("<html>Email Content</html>");
 
-        MailResponse response = notificationService.sendMailToRoommate();
+        CompletableFuture<MailResponse> response = notificationService.sendMailToRoommate();
 
-        assertEquals("Mail sent successfully", response.getMessage());
+        assertEquals("Mail sent successfully", response.get().getMessage());
         verify(roommateRepo, times(1)).findAll();
         verify(javaMailSender, times(2)).send(mimeMessage);
     }

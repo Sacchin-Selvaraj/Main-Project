@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
@@ -26,6 +27,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -53,12 +55,12 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Scheduled(cron = "0 0 0 1 * ?")
     @Transactional
+    @Async("taskExecutor")
     public MailResponse sendMailToRoommateAutomatically() {
         log.info("Starting automatic mail sending process for roommates");
         try {
             List<Roommate> roommates = roommateRepo.findAll();
             if (roommates.isEmpty()) {
-                log.warn("No roommates found in the Db");
                 throw new RoommateException("No Roommates details present");
             }
 
@@ -76,9 +78,8 @@ public class NotificationServiceImpl implements NotificationService {
             log.info("Updated rent status and amount for {} roommates", updatedRoommates.size());
 
             updatedRoommates.forEach(this::sendMailToRoommate);
-            log.info("Mails sent successfully to all roommates");
-        } catch (RoommateException e) {
-            log.error("Error in sending Mail to Roommate Automatically: ", e);
+        } catch (RoommateException ex) {
+            log.error("Error in sending Mail to Roommate Automatically: ", ex);
         }
         return new MailResponse("Mail sent successfully", true);
     }
@@ -88,15 +89,13 @@ public class NotificationServiceImpl implements NotificationService {
         String roomNumber = roommate.getRoomNumber();
         Room room = roomRepo.findByRoomNumber(roomNumber);
         if (room == null) {
-            log.error("Room not found for room number: {}", roomNumber);
             throw new RoommateException("Room not found for room number: " + roomNumber);
         }
         double roomRent = room.getPrice();
 
         List<ReferralDetails> referralDetailsList = roommate.getReferralDetailsList();
         if (referralDetailsList.isEmpty()) {
-            log.info("No referral details found for roommate: {}", roommate.getUsername());
-            return roomRent;
+            return roommate.getWithFood() ? roomRent : roomRent - RoomConstants.WITHOUT_FOOD;
         }
 
         int count = (int) referralDetailsList.stream()
@@ -105,25 +104,26 @@ public class NotificationServiceImpl implements NotificationService {
 
         referralDetailsList.removeIf(referral -> !roommatesMap.containsKey(referral.getRoommateUniqueId()));
 
-        log.debug("Final rent calculated for roommate: {}", roommate.getUsername());
-        return roomRent - (roomRent * (RoomConstants.REFERRAL_PERCENTAGE * count));
+        log.info("Final rent calculated for roommate: {}", roommate.getUsername());
+        double finalRent = roomRent - (roomRent * (RoomConstants.REFERRAL_PERCENTAGE * count));
+        return roommate.getWithFood() ? finalRent : finalRent - RoomConstants.WITHOUT_FOOD;
     }
 
     @Override
-    public MailResponse sendMailToRoommate() {
-        log.info("Starting manual mail sending process for roommates");
+    @Async("taskExecutor")
+    public CompletableFuture<MailResponse> sendMailToRoommate() {
         List<Roommate> roommates = roommateRepo.findAll();
         if (roommates.isEmpty()) {
-            log.error("No roommates found in the system");
             throw new RoommateException("No Roommates details present");
         }
         for (Roommate roommate : roommates) {
             sendMailToRoommate(roommate);
+            log.info("Current Thread in 1st method : {}",Thread.currentThread().getName());
         }
         MailResponse mailResponse = new MailResponse();
         mailResponse.setMessage("Mail sent successfully");
         mailResponse.setStatus(Boolean.TRUE);
-        return mailResponse;
+        return CompletableFuture.completedFuture(mailResponse);
     }
 
     private void sendMail(String toMail, String subject, Map<String, Object> model) {
@@ -142,10 +142,8 @@ public class NotificationServiceImpl implements NotificationService {
             helper.setText(htmlContent, true);
 
             javaMailSender.send(mimeMessage);
-            log.info("Mail sent successfully to: {}", toMail);
 
         } catch (MessagingException e) {
-            log.error("Failed to send mail to: {}", toMail, e);
             throw new NotificationException("Failed to send email");
         }
 
@@ -153,10 +151,8 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public MailResponse sendPendingMail() {
-        log.info("Starting pending mail process for roommates");
         List<Roommate> roommateList = roommateRepo.findAll();
         if (roommateList.isEmpty()) {
-            log.error("No roommates found in the system");
             throw new RoommateException("No Roommates Available");
         }
         boolean flag = true;
@@ -171,19 +167,16 @@ public class NotificationServiceImpl implements NotificationService {
             MailResponse mailResponse = new MailResponse();
             mailResponse.setMessage("There are no Payment Pending from Roommates");
             mailResponse.setStatus(Boolean.FALSE);
-            log.info("No pending payments found for roommates");
             return mailResponse;
         } else {
             MailResponse mailResponse = new MailResponse();
             mailResponse.setMessage("Mail sent successfully to the Remaining Roommates");
             mailResponse.setStatus(Boolean.TRUE);
-            log.info("Mails sent successfully to roommates with pending payments");
             return mailResponse;
         }
     }
 
     public void sendMailToRoommate(Roommate roommate) {
-        log.info("Sending mail to roommate: {}", roommate.getUsername());
         String subject = "Payment Remainder from ShareSpace";
         String toMail = roommate.getEmail();
         Map<String, Object> model = new HashMap<>();

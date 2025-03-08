@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+
 @RestController
 @RequestMapping("/notification")
 public class NotificationController {
@@ -24,11 +27,12 @@ public class NotificationController {
     }
 
     @GetMapping("/send-mail")
-    public ResponseEntity<MailResponse> sendMail(){
+    public ResponseEntity<MailResponse> sendMail() throws ExecutionException, InterruptedException {
         logger.info("Received an request to send an Email to all roommates");
-        MailResponse mailResponse=notificationService.sendMailToRoommate();
+        CompletableFuture<MailResponse> mailResponse=notificationService.sendMailToRoommate();
         logger.info("Mail sent successfully to all roommates");
-        return new ResponseEntity<>(mailResponse, HttpStatus.OK);
+        MailResponse mailResponseIfSent=new MailResponse("Mail sent successfully",false);
+        return new ResponseEntity<>(mailResponse.getNow(mailResponseIfSent), HttpStatus.OK);
     }
 
     @GetMapping("/send-rent-pending")

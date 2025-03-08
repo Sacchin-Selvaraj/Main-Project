@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import sharespace.model.AvailabilityCheck;
 import sharespace.model.Room;
 import sharespace.model.Roommate;
+import sharespace.payload.RoomDTO;
 import sharespace.payload.RoommateDTO;
 import sharespace.service.RoomService;
 import jakarta.validation.Valid;
@@ -28,36 +29,36 @@ public class RoomController {
     }
 
     @GetMapping("/all-rooms")
-    public ResponseEntity<List<Room>> getAllRoom(){
+    public ResponseEntity<List<RoomDTO>> getAllRoom(){
         log.info("Fetching all rooms");
-        List<Room> roomList=roomService.getAllRoomDetails();
+        List<RoomDTO> roomList=roomService.getAllRoomDetails();
         log.info("Fetched {} rooms", roomList.size());
         return new ResponseEntity<>(roomList, HttpStatus.OK);
     }
 
     @GetMapping("/get-room/{roomId}")
-    public ResponseEntity<Room> getRoom(@PathVariable int roomId ){
+    public ResponseEntity<RoomDTO> getRoom(@PathVariable int roomId ){
         log.info("Fetching room with ID: {}", roomId);
-        Room room=roomService.getRoomById(roomId);
-        if (room != null) {
+        RoomDTO roomDTO=roomService.getRoomById(roomId);
+        if (roomDTO != null) {
             log.info("Room found with ID: {}", roomId);
         } else {
             log.warn("Room not found with ID: {}", roomId);
         }
-        return new ResponseEntity<>(room,HttpStatus.OK);
+        return new ResponseEntity<>(roomDTO,HttpStatus.OK);
     }
 
     @PostMapping("/check-availability")
-    public ResponseEntity<List<Room>> checkAvailability (@RequestBody AvailabilityCheck available){
-        log.info("Checking availability for: {}", available);
-        List<Room> rooms = roomService.checkAvailability(available);
+    public ResponseEntity<List<RoomDTO>> checkAvailability (@RequestBody AvailabilityCheck available){
+        log.info("Checking availability");
+        List<RoomDTO> rooms = roomService.checkAvailability(available);
         log.info("Found {} available rooms", rooms.size());
         return new ResponseEntity<>(rooms, HttpStatus.OK);
     }
 
     @PostMapping("/book/{roomId}")
     public ResponseEntity<RoommateDTO> bookRoom(@PathVariable int roomId, @Valid @RequestBody Roommate roommate){
-        log.info("Booking room with ID: {} for roommate: {}", roomId, roommate);
+        log.info("Booking room with Id: {}", roomId);
         RoommateDTO roommateDTO=roomService.bookRoom(roomId, roommate);
         if (roommateDTO != null) {
             log.info("Room booked successfully with ID: {}", roomId);
@@ -76,9 +77,9 @@ public class RoomController {
     }
 
     @PatchMapping("/edit-room/{roomId}")
-    public ResponseEntity<Room> editRoom(@PathVariable int roomId,@RequestBody Room room){
+    public ResponseEntity<RoomDTO> editRoom(@PathVariable int roomId,@RequestBody Room room){
         log.info("Editing room with ID: {}", roomId);
-        Room updatedRoom=roomService.editRoom(roomId,room);
+        RoomDTO updatedRoom=roomService.editRoom(roomId,room);
         if (updatedRoom != null) {
             log.info("Room updated successfully with ID: {}", roomId);
         } else {

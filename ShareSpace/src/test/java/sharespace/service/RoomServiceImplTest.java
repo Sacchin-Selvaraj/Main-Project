@@ -12,14 +12,13 @@ import sharespace.model.AvailabilityCheck;
 import sharespace.model.Room;
 import sharespace.model.Roommate;
 import sharespace.password.PasswordUtils;
+import sharespace.payload.RoomDTO;
 import sharespace.payload.RoommateDTO;
 import sharespace.repository.RoomRepository;
 import sharespace.repository.RoommateRepository;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.time.LocalDate;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -44,6 +43,8 @@ class RoomServiceImplTest {
     private Room room;
     private Roommate roommate;
     private RoommateDTO roommateDTO;
+    private RoomDTO roomDTO1;
+    private RoomDTO roomDTO2;
 
     @BeforeEach
     void setUp() {
@@ -62,6 +63,7 @@ class RoomServiceImplTest {
         roommate.setEmail("testuser@gmail.com");
         roommate.setPassword("encryptedPassword");
         roommate.setWithFood(true);
+        roommate.setCheckInDate(LocalDate.now());
         roommate.setReferralId(null);
 
         roommateDTO = new RoommateDTO();
@@ -69,6 +71,24 @@ class RoomServiceImplTest {
         roommateDTO.setEmail("testuser@gmail.com");
         roommateDTO.setWithFood(true);
 
+        roomDTO1=new RoomDTO();
+        roomDTO1.setRoomType("Single Sharing");
+        roomDTO1.setRoomNumber("F1");
+        roomDTO1.setCapacity(1);
+        roomDTO1.setCurrentCapacity(0);
+        roomDTO1.setFloorNumber(1);
+        roomDTO1.setPrice(7000.00);
+        roomDTO1.setPerDayPrice(250.00);
+        roomDTO1.setIsAcAvailable(true);
+
+        roomDTO2=new RoomDTO();
+        roomDTO2.setRoomType("Two Sharing");
+        roomDTO2.setCapacity(2);
+        roomDTO2.setCurrentCapacity(0);
+        roomDTO2.setFloorNumber(2);
+        roomDTO2.setPrice(6000.00);
+        roomDTO2.setPerDayPrice(230.00);
+        roomDTO2.setIsAcAvailable(true);
     }
 
 
@@ -76,8 +96,10 @@ class RoomServiceImplTest {
     void getAllRoomDetails() {
 
         when(roomRepo.findAll()).thenReturn(Collections.singletonList(room));
+        when(modelMapper.map(room,RoomDTO.class)).thenReturn(roomDTO1);
 
-        List<Room> roomList=roomService.getAllRoomDetails();
+
+        List<RoomDTO> roomList=roomService.getAllRoomDetails();
 
         assertEquals(1,roomList.size());
         verify(roomRepo,times(1)).findAll();
@@ -98,8 +120,9 @@ class RoomServiceImplTest {
     @Test
     void getRoomById() {
         when(roomRepo.findById(1)).thenReturn(Optional.of(room));
+        when(modelMapper.map(room,RoomDTO.class)).thenReturn(roomDTO1);
 
-        Room foundRoom = roomService.getRoomById(1);
+        RoomDTO foundRoom = roomService.getRoomById(1);
 
         assertNotNull(foundRoom);
         assertEquals("F1", foundRoom.getRoomNumber());
@@ -122,7 +145,7 @@ class RoomServiceImplTest {
 
         when(roomRepo.findAll()).thenReturn(Collections.singletonList(room));
 
-        List<Room> availableRooms = roomService.checkAvailability(availability);
+        List<RoomDTO> availableRooms = roomService.checkAvailability(availability);
 
         assertNotNull(availableRooms);
         assertEquals(1, availableRooms.size());

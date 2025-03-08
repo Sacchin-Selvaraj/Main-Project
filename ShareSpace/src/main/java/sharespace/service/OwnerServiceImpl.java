@@ -1,5 +1,6 @@
 package sharespace.service;
 
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -22,18 +23,17 @@ public class OwnerServiceImpl implements OwnerService {
     }
 
     @Override
+    @Transactional
     public String verifyOwnerDetails(OwnerDetails ownerDetails) {
         log.info("{} is trying to login into Owner Dashboard",ownerDetails.getOwnerName());
         OwnerDetails ownerDetailsFromDatabase = ownerRepo.findByOwnerName(ownerDetails.getOwnerName());
         if (ownerDetailsFromDatabase == null){
-            log.error("Entered Owner name is invalid");
             throw new OwnerException("Owner name is invalid");
         }
 
         String decryptedPassword = passwordUtils.decrypt(ownerDetailsFromDatabase.getPassword());
 
         if (!decryptedPassword.equals(ownerDetails.getPassword())) {
-            log.error("Password is invalid for the Owner : {}",ownerDetails.getOwnerName());
             throw new OwnerException("Password is Invalid");
         }
         log.info("Owner Authenticated Successfully");
@@ -41,11 +41,14 @@ public class OwnerServiceImpl implements OwnerService {
     }
 
 
+    @Transactional
     public void addOwnerDetails(OwnerDetails ownerDetails) {
-        log.info("adding owner details");
         if (ownerDetails == null){
-            log.error("Entered Owner details are invalid");
             throw new OwnerException("Owner details are invalid");
+        }
+        boolean ownerExists = ownerRepo.existsByOwnerName(ownerDetails.getOwnerName());
+        if (ownerExists) {
+            return;
         }
         String encryptedPassword = passwordUtils.encrypt(ownerDetails.getPassword());
         ownerDetails.setPassword(encryptedPassword);

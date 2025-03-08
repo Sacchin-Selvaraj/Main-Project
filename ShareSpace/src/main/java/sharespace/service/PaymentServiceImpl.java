@@ -1,6 +1,7 @@
 package sharespace.service;
 
 import jakarta.transaction.Transactional;
+import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -13,6 +14,7 @@ import sharespace.model.Payment;
 import sharespace.model.PaymentCallBackRequest;
 import sharespace.model.RentStatus;
 import sharespace.model.Roommate;
+import sharespace.payload.PaymentDTO;
 import sharespace.repository.PaymentRepository;
 import sharespace.repository.RoommateRepository;
 import com.razorpay.Order;
@@ -32,6 +34,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final RoommateRepository roommateRepo;
     private final PaymentRepository paymentRepo;
+    private final ModelMapper mapper;
 
     @Value("${razorpay.api.key}")
     private String apiKey;
@@ -39,22 +42,20 @@ public class PaymentServiceImpl implements PaymentService {
     @Value("${razorpay.api.secret}")
     private String apiSecret;
 
-    public PaymentServiceImpl(RoommateRepository roommateRepo, PaymentRepository paymentRepo) {
+    public PaymentServiceImpl(RoommateRepository roommateRepo, PaymentRepository paymentRepo, ModelMapper mapper) {
         this.roommateRepo = roommateRepo;
         this.paymentRepo = paymentRepo;
+        this.mapper = mapper;
     }
 
     @Override
     @Transactional
     public PaymentCallBackRequest createPaymentForUser(String username) throws RazorpayException {
-        log.info("Creating payment for user: {}", username);
         if (username == null || username.isEmpty()) {
-            log.error("Username cannot be null or empty");
             throw new RoommateException("Username cannot be null or empty");
         }
         Roommate roommate = roommateRepo.findByUsername(username);
         if (roommate == null) {
-            log.error("No user found with username: {}", username);
             throw new RoommateException("No User found under this name : " + username);
         }
         Payment payment = new Payment();
@@ -63,6 +64,7 @@ public class PaymentServiceImpl implements PaymentService {
         roommate.getPaymentList().add(payment);
         payment.setUsername(roommate.getUsername());
         payment.setRoomNumber(roommate.getRoomNumber());
+        payment.setRoommate(roommate);
         roommateRepo.save(roommate);
 
         log.info("Payment created successfully for user: {}", username);
@@ -91,7 +93,7 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setPaymentDate(LocalDate.now());
         payment.setPaymentMethod(order.get("entity"));
 
-        log.debug("Payment created with orderId: {}", payment.getTransactionId());
+        log.info("Payment created with orderId: {}", payment.getTransactionId());
         return payment;
     }
 
@@ -99,17 +101,14 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     @Transactional
     public String updateStatus(PaymentCallBackRequest request) throws RazorpayException {
-        log.info("Updating payment status for order Id: {}", request.getOrderId());
         String razorOrderId = request.getOrderId();
         RazorpayClient razorpayClient=new RazorpayClient(apiKey,apiSecret);
         com.razorpay.Payment paymentData =razorpayClient.payments.fetch(request.getPaymentId());
         if(!request.getPaymentId().equals(paymentData.get("id"))){
-            log.error("Payment was not processed with correct order ID: {}", request.getOrderId());
             throw new PaymentException("Payment was not Processed with correct Order Id");
         }
         Payment payment = paymentRepo.findBytransactionId(razorOrderId);
         if (payment == null) {
-            log.error("Payment not found for transaction Id: {}", razorOrderId);
             throw new PaymentException("Payment not found");
         }
         String userName=payment.getUsername();
@@ -129,10 +128,8 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public List<Payment> getAllPayments() {
-        log.info("Fetching all payments");
         List<Payment> paymentList = paymentRepo.findAll();
         if (paymentList.isEmpty()) {
-            log.warn("No payments found in the system");
             throw new PaymentException("No Payments have been done so far");
         }
 
@@ -142,7 +139,6 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public Payment addPayment(Payment payment) {
-        log.info("Adding new payment: {}", payment);
         Payment savedPayment = paymentRepo.save(payment);
         log.info("Payment added successfully with transaction ID: {}", savedPayment.getTransactionId());
         return savedPayment;
@@ -150,7 +146,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     @Transactional
-    public Page<Payment> sortPayments(Integer page, Integer limit, LocalDate paymentDate, String sortField, String sortOrder) {
+    public Page<PaymentDTO> sortPayments(Integer page, Integer limit, LocalDate paymentDate, String sortField, String sortOrder) {
         Sort sort=sortOrder.equalsIgnoreCase("asc")?Sort.by(sortField).ascending():Sort.by(sortField).descending();
 
         Pageable pageable= PageRequest.of(page,limit,sort);
@@ -162,12 +158,17 @@ public class PaymentServiceImpl implements PaymentService {
             paymentPage=paymentRepo.findByPaymentDate(paymentDate,pageable);
         }
         if (paymentPage.isEmpty()) {
-            log.warn("No payments found with the given criteria");
             throw new PaymentException("No Payment available ");
         }
 
         log.info("Fetched {} payment Details", paymentPage.getTotalElements());
-        return paymentPage;
+
+        return paymentPage.map(payment -> {
+            PaymentDTO paymentDTO = mapper.map(payment, PaymentDTO.class);
+            paymentDTO.setUsername(payment.getRoommate().getUsername());
+            paymentDTO.setRoomNumber(payment.getRoommate().getRoomNumber());
+            return paymentDTO;
+        });
     }
 
     @Override
@@ -179,7 +180,6 @@ public class PaymentServiceImpl implements PaymentService {
             paymentList = paymentRepo.findAllByUsername(username);
         }
         if (paymentList.isEmpty()) {
-            log.warn("No payments found for username: {}", username);
             throw new PaymentException("No Payments available under - " + username);
         }
         log.info("Fetched {} payments for username: {}", paymentList.size(), username);

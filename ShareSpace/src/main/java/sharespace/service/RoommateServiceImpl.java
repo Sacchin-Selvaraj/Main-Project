@@ -43,10 +43,8 @@ public class RoommateServiceImpl implements RoommateService {
 
     @Override
     public List<Roommate> getAllRoommates() {
-        log.info("Fetching all roommates");
         List<Roommate> roommateList = roommateRepo.findAll();
         if (roommateList.isEmpty()) {
-            log.error("No roommates found in the DB");
             throw new RoommateException("No Roommate available");
         }
         log.info("Successfully fetched {} roommates", roommateList.size());
@@ -55,9 +53,7 @@ public class RoommateServiceImpl implements RoommateService {
 
     @Override
     public Roommate updateEmail(int id, String email) {
-        log.info("Updating email for roommate with Id: {}", id);
         if (email == null || email.isEmpty()) {
-            log.error("Email cannot be null or empty");
             throw new RoommateException("Email cannot be null or empty");
         }
         Roommate roommate = roommateRepo.findById(id)
@@ -69,10 +65,8 @@ public class RoommateServiceImpl implements RoommateService {
 
     @Transactional
     public Roommate updateRoommate(int roommateId, Roommate roommate) {
-        log.info("Updating roommate details for ID: {}", roommateId);
         Roommate existingRoommate = roommateRepo.findById(roommateId)
                 .orElseThrow(() -> {
-                    log.error("Roommate not found with Id: {}", roommateId);
                     return new RoommateException("Roommate not found with id " + roommateId);
                 });
 
@@ -92,18 +86,15 @@ public class RoommateServiceImpl implements RoommateService {
 
     @Override
     public Roommate getRoommate(LoginDetails loginDetails) {
-        log.info("{} is trying to login",loginDetails.getUsername());
         String username = loginDetails.getUsername();
         Roommate roommate = roommateRepo.findByUsername(username);
         if (roommate == null){
-            log.error("Invalid username: {}", username);
             throw new RoommateException("Username is invalid");
         }
 
         String encryptedPassword = roommate.getPassword();
         String decryptedPassword = passwordUtils.decrypt(encryptedPassword);
         if (!decryptedPassword.equals(loginDetails.getPassword())) {
-            log.error("Invalid password for username: {}", username);
             throw new RoommateException("Password was invalid");
         }
 
@@ -114,10 +105,8 @@ public class RoommateServiceImpl implements RoommateService {
     @Override
     @Transactional
     public void deleteRoommate(String username) {
-        log.info("Deleting roommate with username: {}", username);
         Roommate roommate = roommateRepo.findByUsername(username);
         if (roommate == null) {
-            log.error("Roommate not found with username: {}", username);
             throw new RoommateException("No Roommate present under this Username");
         }
         String roomNumber = roommate.getRoomNumber();
@@ -134,27 +123,29 @@ public class RoommateServiceImpl implements RoommateService {
     @Override
     @Transactional
     public Roommate updateDetails(int roommateId, UpdateDetails updateDetails) {
-        log.info("Updating details for roommate with Id: {}", roommateId);
         Roommate roommate = roommateRepo.findById(roommateId).orElseThrow(() -> new RoommateException("No Roommate found under this Id"));
         if (updateDetails.getUsername() != null && !updateDetails.getUsername().equals(roommate.getUsername())) {
             if (checkUsernameExists(updateDetails.getUsername())) {
-                log.error("Username already exists: {}", updateDetails.getUsername());
                 throw new RoommateException("Username already exists");
             }
             roommate.setUsername(updateDetails.getUsername());
         }
         if (updateDetails.getEmail() != null && !updateDetails.getEmail().equals(roommate.getEmail())) {
             if (checkEmailIdExists(updateDetails.getEmail())) {
-                log.error("Email already exists: {}", updateDetails.getEmail());
                 throw new RoommateException("Email already exists");
             }
             roommate.setEmail(updateDetails.getEmail());
         }
-        if (updateDetails.getPassword() != null) {
+        if (updateDetails.getPassword() != null&&updateDetails.getPassword().length()>5) {
             String encryptedPassword = passwordUtils.encrypt(updateDetails.getPassword());
             roommate.setPassword(encryptedPassword);
         }
         if (updateDetails.getWithFood() != null && !roommate.getWithFood().equals(updateDetails.getWithFood())) {
+            if (roommate.getLastModifiedDate().isAfter(LocalDate.now().minusDays(28))){
+                throw new RoommateException("You can edit the Food service only after : "
+                        +roommate.getLastModifiedDate().plusDays(28));
+            }
+            roommate.setLastModifiedDate(LocalDate.now());
             roommate.setWithFood(updateDetails.getWithFood());
             int rentAdjustment = updateDetails.getWithFood() ? RoomConstants.WITHOUT_FOOD : -(RoomConstants.WITHOUT_FOOD);
             roommate.setRentAmount(roommate.getRentAmount() + rentAdjustment);
@@ -168,26 +159,22 @@ public class RoommateServiceImpl implements RoommateService {
     }
 
     private boolean checkUsernameExists(String username) {
-        log.info("Checking if username exists: {}", username);
         List<Roommate> roommateList = roommateRepo.findAll();
         boolean flag = roommateList.stream().noneMatch(roommate -> roommate.getUsername().equalsIgnoreCase(username));
         return !flag;
     }
 
     private boolean checkEmailIdExists(String email) {
-        log.info("Checking if email exists: {}", email);
         return roommateRepo.existsByEmailIgnoreCase(email);
     }
 
     @Override
     @Transactional
     public String sendVacateRequest(int roommateId, VacateRequest vacateRequest) {
-        log.info("Sending vacate request for roommate with Id: {}", roommateId);
         try {
             Roommate roommate = roommateRepo.findById(roommateId).orElseThrow(() -> new RoommateException("No Roommate found under this Id"));
             vacateRequest.setRoommate(roommate);
             if (vacateRequest.getCheckOutDate().isBefore(LocalDate.now())) {
-                log.error("CheckOut date cannot be in the past: {}", vacateRequest.getCheckOutDate());
                 throw new RoommateException("CheckOut Date can't be in Past :" +vacateRequest.getCheckOutDate());
             }
             roommate.setCheckOutDate(vacateRequest.getCheckOutDate());
@@ -199,17 +186,14 @@ public class RoommateServiceImpl implements RoommateService {
         } catch (RoommateException e) {
             throw e;
         } catch (Exception e) {
-            log.error("Error sending vacate request: {}", e.getMessage());
             throw new RoommateException("Already Vacate Request have been sent");
         }
     }
 
     @Override
     public List<VacateResponseDTO> getPendingVacateRequests() {
-        log.info("Fetching pending vacate requests");
         List<VacateRequest> vacateRequests = vacateRepo.findByIsReadFalse();
         if (vacateRequests.isEmpty()){
-            log.warn("No pending vacate requests found");
             throw new RoommateException("No Vacate Request so Far");
         }
 
@@ -219,7 +203,6 @@ public class RoommateServiceImpl implements RoommateService {
                     mapper.map(src -> src.getRoommate().getRoomNumber(), VacateResponseDTO::setRoomNumber);
                 });
 
-        log.info("Fetched pending vacate requests");
         return vacateRequests.stream()
                 .map(vacateRequest -> {
                     VacateResponseDTO dto = modelMapper.map(vacateRequest, VacateResponseDTO.class);
@@ -232,10 +215,8 @@ public class RoommateServiceImpl implements RoommateService {
     @Override
     @Transactional
     public void markAsRead(int requestId) {
-        log.info("Marking vacate request as read with Id: {}", requestId);
         VacateRequest vacateRequest = vacateRepo.findById(requestId)
                 .orElseThrow(() -> {
-                    log.error("Vacate request not found with Id: {}", requestId);
                     return new RoommateException("Vacate request not found");
                 });
         vacateRepo.delete(vacateRequest);
@@ -254,7 +235,6 @@ public class RoommateServiceImpl implements RoommateService {
             roommatePage=roommateRepo.findByRentStatus(rentStatus,pageable);
         }
         if (roommatePage.isEmpty()) {
-            log.warn("No roommates found with the given criteria");
             throw new RoommateException("No Roommates available");
         }
         log.info("Fetched {} roommates details", roommatePage.getTotalElements());

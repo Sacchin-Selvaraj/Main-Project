@@ -259,6 +259,7 @@ class RoommateServiceImplTest {
         roommate.setPassword("oldPassword");
         roommate.setWithFood(false);
         roommate.setRentAmount(1000);
+        roommate.setLastModifiedDate(LocalDate.now().minusDays(29));
 
         when(roommateRepo.findById(roommateId)).thenReturn(Optional.of(roommate));
         when(passwordUtils.encrypt("newPassword")).thenReturn("encryptedPassword");
@@ -344,7 +345,7 @@ class RoommateServiceImplTest {
         RoommateException exception = assertThrows(RoommateException.class, () -> {
             roommateService.sendVacateRequest(roommateId, vacateRequest);
         });
-        assertEquals("CheckOut Date can't be in Past ", exception.getMessage());
+        assertEquals("CheckOut Date can't be in Past :"+LocalDate.now().minusDays(5), exception.getMessage());
         verify(roommateRepo, times(1)).findById(roommateId);
         verify(vacateRepo, never()).save(any());
         verify(roommateRepo, never()).save(any());

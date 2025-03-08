@@ -25,11 +25,12 @@ public class Room {
     private Integer currentCapacity;
     private Boolean isAcAvailable;
     private Double price;
+    private Double perDayPrice;
 
     @OneToMany(fetch = FetchType.LAZY,cascade = {CascadeType.PERSIST,CascadeType.MERGE,CascadeType.REMOVE},orphanRemoval = true)
     private List<Roommate> roommateList =new ArrayList<>();
 
-    public Room(int floorNumber, String roomNumber, String roomType, int capacity, int currentCapacity, boolean isAcAvailable, double price, List<Roommate> roommateList) {
+    public Room(Integer floorNumber, String roomNumber, String roomType, Integer capacity, Integer currentCapacity, Boolean isAcAvailable, Double price, Double perDayPrice, List<Roommate> roommateList) {
         this.floorNumber = floorNumber;
         this.roomNumber = roomNumber;
         this.roomType = roomType;
@@ -37,6 +38,7 @@ public class Room {
         this.currentCapacity = currentCapacity;
         this.isAcAvailable = isAcAvailable;
         this.price = price;
+        this.perDayPrice = perDayPrice;
         this.roommateList = roommateList;
     }
 

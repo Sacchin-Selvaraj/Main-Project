@@ -10,6 +10,9 @@ import org.springframework.http.ResponseEntity;
 import sharespace.model.MailResponse;
 import sharespace.service.NotificationService;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -27,10 +30,11 @@ class NotificationControllerTest {
     }
 
     @Test
-    void sendMail() {
-        MailResponse mailResponse=new MailResponse();
+    void sendMail() throws ExecutionException, InterruptedException {
+        MailResponse  mailResponse=new MailResponse();
         mailResponse.setMessage("Mail Sent Successfully");
-        when(notificationService.sendMailToRoommate()).thenReturn(mailResponse);
+
+        when(notificationService.sendMailToRoommate()).thenReturn(CompletableFuture.completedFuture(mailResponse));
 
         ResponseEntity<MailResponse> response=notificationController.sendMail();
 
