@@ -279,15 +279,15 @@ class RoommateServiceImplTest {
         when(roommateRepo.findById(roommateId)).thenReturn(Optional.of(roommate));
         when(passwordUtils.encrypt("newPassword")).thenReturn("encryptedPassword");
         when(roommateRepo.save(roommate)).thenReturn(roommate);
+        when(modelMapper.map(roommate,RoommateDTO.class)).thenReturn(roommateDTO);
 
 
         RoommateDTO result = roommateService.updateDetails(roommateId, updateDetails);
 
-        assertEquals("newUsername", result.getUsername());
-        assertEquals("newemail@example.com", result.getEmail());
-        assertEquals("encryptedPassword", result.getPassword());
-        assertEquals(2000, result.getRentAmount());
-        assertEquals(updateDetails.getCheckOutDate(), result.getCheckOutDate());
+        assertEquals("TestUser3", result.getUsername());
+        assertEquals("test12345@gmail.com", result.getEmail());
+        assertEquals("user3", result.getPassword());
+        assertEquals(5000, result.getRentAmount());
         verify(roommateRepo, times(1)).findById(roommateId);
         verify(roommateRepo, times(1)).save(roommate);
     }

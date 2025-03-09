@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import sharespace.constants.RoomConstants;
 import sharespace.exception.RoomException;
@@ -39,6 +40,7 @@ public class RoomServiceImpl implements RoomService {
     }
 
     @Override
+    @Cacheable(value = "RoomDetailsCache",key = "'allrooms'")
     public List<OwnerRoomDTO> getAllRoomDetails() {
         List<Room> roomList = roomRepo.findAll();
 

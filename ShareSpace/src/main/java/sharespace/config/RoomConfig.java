@@ -3,6 +3,7 @@ package sharespace.config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -29,6 +30,7 @@ import java.util.List;
 @Component
 @EnableAspectJAutoProxy
 @EnableScheduling
+@EnableCaching
 @EnableAsync
 public class RoomConfig implements CommandLineRunner {
 

@@ -8,5 +8,6 @@ import java.util.List;
 
 @Repository
 public interface GrievanceRepository extends JpaRepository<Grievances,Integer> {
+
     List<Grievances> findByIsReadFalse();
 }
