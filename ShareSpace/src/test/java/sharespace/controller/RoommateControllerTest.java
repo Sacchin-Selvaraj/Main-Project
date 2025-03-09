@@ -1,6 +1,7 @@
 package sharespace.controller;
 
 import sharespace.model.*;
+import sharespace.payload.RoommateDTO;
 import sharespace.payload.VacateResponseDTO;
 import sharespace.service.RoommateService;
 import org.junit.jupiter.api.Assertions;
@@ -26,23 +27,25 @@ class RoommateControllerTest {
     @InjectMocks
     private RoommateController roommateController;
 
+    private RoommateDTO roommateDTO1;
+    private RoommateDTO roommateDTO2;
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        roommateDTO1 = new RoommateDTO();
+        roommateDTO1.setUsername("user1");
+        roommateDTO2 = new RoommateDTO();
+        roommateDTO2.setUsername("user2");
     }
 
     @Test
     void getAllRoommates() {
 
-        Roommate roommate1 = new Roommate();
-        roommate1.setUsername("user1");
-        Roommate roommate2 = new Roommate();
-        roommate2.setUsername("user2");
-        List<Roommate> roommateList = Arrays.asList(roommate1, roommate2);
+        List<RoommateDTO> roommateList = Arrays.asList(roommateDTO1, roommateDTO2);
 
         when(roommateService.getAllRoommates()).thenReturn(roommateList);
 
-        ResponseEntity<List<Roommate>> response = roommateController.getAllRoommates();
+        ResponseEntity<List<RoommateDTO>> response = roommateController.getAllRoommates();
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(2, response.getBody().size());
@@ -54,12 +57,12 @@ class RoommateControllerTest {
         int roommateId=1;
         Roommate roommate=new Roommate();
         roommate.setUsername("James");
-        when(roommateService.updateRoommate(roommateId,roommate)).thenReturn(roommate);
+        when(roommateService.updateRoommate(roommateId,roommate)).thenReturn("Roommate details was updated");
 
-        ResponseEntity<Roommate> updatedRoommate=roommateController.updateRoommate(roommateId,roommate);
+        ResponseEntity<String> updatedRoommate=roommateController.updateRoommate(roommateId,roommate);
 
         Assertions.assertEquals(HttpStatus.OK,updatedRoommate.getStatusCode());
-        assertEquals("James",updatedRoommate.getBody().getUsername());
+        assertEquals("Roommate details was updated",updatedRoommate.getBody());
         verify(roommateService,times(1)).updateRoommate(roommateId,roommate);
     }
 
@@ -72,12 +75,12 @@ class RoommateControllerTest {
         Roommate updatedRoommate = new Roommate();
         updatedRoommate.setEmail("newemail@example.com");
 
-        when(roommateService.updateEmail(id, emailUpdateRequest.getEmail())).thenReturn(updatedRoommate);
+        when(roommateService.updateEmail(id, emailUpdateRequest.getEmail())).thenReturn("Roommate details was updated");
 
-        ResponseEntity<Roommate> response = roommateController.updateEmail(id, emailUpdateRequest);
+        ResponseEntity<String> response = roommateController.updateEmail(id, emailUpdateRequest);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("newemail@example.com", response.getBody().getEmail());
+        assertEquals("Roommate details was updated", response.getBody());
         verify(roommateService, times(1)).updateEmail(id, emailUpdateRequest.getEmail());
     }
 
@@ -112,15 +115,14 @@ class RoommateControllerTest {
         int id=1;
         UpdateDetails updateDetails=new UpdateDetails();
         updateDetails.setUsername("testuser");
-        Roommate roommate=new Roommate();
-        roommate.setUsername("testuser");
 
-        when(roommateService.updateDetails(id,updateDetails)).thenReturn(roommate);
 
-        ResponseEntity<Roommate> response=roommateController.updateDetails(id,updateDetails);
+        when(roommateService.updateDetails(id,updateDetails)).thenReturn(roommateDTO1);
+
+        ResponseEntity<RoommateDTO> response=roommateController.updateDetails(id,updateDetails);
 
         assertEquals(HttpStatus.OK,response.getStatusCode());
-        assertEquals("testuser",response.getBody().getUsername());
+        assertEquals("user1",response.getBody().getUsername());
         verify(roommateService,times(1)).updateDetails(id,updateDetails);
 
     }

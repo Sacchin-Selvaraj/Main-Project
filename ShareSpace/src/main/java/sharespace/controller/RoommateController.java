@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import sharespace.model.*;
+import sharespace.payload.RoommateDTO;
 import sharespace.payload.VacateResponseDTO;
 import sharespace.service.RoommateService;
 import jakarta.validation.Valid;
@@ -27,26 +28,26 @@ public class RoommateController {
     }
 
     @GetMapping("/all-roommates")
-    public ResponseEntity<List<Roommate>> getAllRoommates(){
+    public ResponseEntity<List<RoommateDTO>> getAllRoommates(){
         logger.info("Received an request to fetch all the Roommate details");
-        List<Roommate> roommateList =roommateService.getAllRoommates();
+        List<RoommateDTO> roommateList =roommateService.getAllRoommates();
         logger.info("Fetched {} roommate details",roommateList.size());
         return new ResponseEntity<>(roommateList, HttpStatus.OK);
     }
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<Roommate> updateRoommate(@PathVariable int id, @RequestBody @Valid Roommate roommate) {
+    public ResponseEntity<String> updateRoommate(@PathVariable int id, @RequestBody @Valid Roommate roommate) {
         logger.info("Received an request to update roommate details for roommate {}",id);
-        Roommate updatedRoommate = roommateService.updateRoommate(id, roommate);
-        logger.info("Roommate details updated for the {}",updatedRoommate.getUsername());
-        return new ResponseEntity<>(updatedRoommate, HttpStatus.OK);
+        String response = roommateService.updateRoommate(id, roommate);
+        logger.info("Roommate details updated ");
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PatchMapping("/email/{id}")
-    public ResponseEntity<Roommate> updateEmail(@PathVariable int id, @RequestBody @Valid EmailUpdateRequest emailUpdateRequest) {
-        Roommate updatedRoommate = roommateService.updateEmail(id, emailUpdateRequest.getEmail());
-        logger.info("Email id was updated for the {}",updatedRoommate.getUsername());
-        return new ResponseEntity<>(updatedRoommate, HttpStatus.OK);
+    public ResponseEntity<String> updateEmail(@PathVariable int id, @RequestBody @Valid EmailUpdateRequest emailUpdateRequest) {
+        String response = roommateService.updateEmail(id, emailUpdateRequest.getEmail());
+        logger.info("Email id was updated" );
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @DeleteMapping("/vacate/{username}")
@@ -67,9 +68,9 @@ public class RoommateController {
     }
 
     @PatchMapping("/update-details/{roommateId}")
-    public ResponseEntity<Roommate> updateDetails(@PathVariable int roommateId,@Valid @RequestBody UpdateDetails updateDetails){
+    public ResponseEntity<RoommateDTO> updateDetails(@PathVariable int roommateId,@Valid @RequestBody UpdateDetails updateDetails){
         logger.info("Received an request to update the roommate details for the roommateId {}",roommateId);
-        Roommate roommate=roommateService.updateDetails(roommateId,updateDetails);
+        RoommateDTO roommate=roommateService.updateDetails(roommateId,updateDetails);
         logger.info("Successfully updated details for the {}",roommate.getUsername());
         return new ResponseEntity<>(roommate,HttpStatus.OK);
     }
@@ -98,7 +99,7 @@ public class RoommateController {
     }
 
     @PostMapping("/sort")
-    public ResponseEntity<Page<Roommate>> sortRoommates(
+    public ResponseEntity<Page<RoommateDTO>> sortRoommates(
             @RequestParam(name = "page") Integer page,
             @RequestParam(name = "limit") Integer limit,
             @RequestParam(name = "rentStatus",required = false) RentStatus rentStatus,
@@ -107,7 +108,7 @@ public class RoommateController {
 
     ){
         logger.info("Request to sort the Roommate details");
-        Page<Roommate> roommates=roommateService.sortRoommates(page,limit,rentStatus,sortField,sortOrder);
+        Page<RoommateDTO> roommates=roommateService.sortRoommates(page,limit,rentStatus,sortField,sortOrder);
         logger.info("Received {} roommate details",roommates.getTotalElements());
         return new ResponseEntity<>(roommates,HttpStatus.OK);
     }

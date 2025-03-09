@@ -13,7 +13,9 @@ import sharespace.constants.RoomConstants;
 import sharespace.exception.RoommateException;
 import sharespace.model.*;
 import sharespace.password.PasswordUtils;
+import sharespace.payload.RoommateDTO;
 import sharespace.payload.VacateResponseDTO;
+import sharespace.repository.PaymentRepository;
 import sharespace.repository.RoomRepository;
 import sharespace.repository.RoommateRepository;
 import sharespace.repository.VacateRepository;
@@ -31,28 +33,31 @@ public class RoommateServiceImpl implements RoommateService {
     private final RoomRepository roomRepo;
     private final PasswordUtils passwordUtils;
     private final VacateRepository vacateRepo;
+    private final PaymentRepository paymentRepo;
     private final ModelMapper modelMapper;
 
-    public RoommateServiceImpl(RoommateRepository roommateRepo, RoomRepository roomRepo, PasswordUtils passwordUtils, VacateRepository vacateRepo, ModelMapper modelMapper) {
+    public RoommateServiceImpl(RoommateRepository roommateRepo, RoomRepository roomRepo, PasswordUtils passwordUtils, VacateRepository vacateRepo, PaymentRepository paymentRepo, ModelMapper modelMapper) {
         this.roommateRepo = roommateRepo;
         this.roomRepo = roomRepo;
         this.passwordUtils = passwordUtils;
         this.vacateRepo = vacateRepo;
+        this.paymentRepo = paymentRepo;
         this.modelMapper = modelMapper;
     }
 
     @Override
-    public List<Roommate> getAllRoommates() {
+    public List<RoommateDTO> getAllRoommates() {
         List<Roommate> roommateList = roommateRepo.findAll();
         if (roommateList.isEmpty()) {
             throw new RoommateException("No Roommate available");
         }
         log.info("Successfully fetched {} roommates", roommateList.size());
-        return roommateList;
+        return roommateList.stream().map(roommate ->
+                modelMapper.map(roommate,RoommateDTO.class)).toList();
     }
 
     @Override
-    public Roommate updateEmail(int id, String email) {
+    public String updateEmail(int id, String email) {
         if (email == null || email.isEmpty()) {
             throw new RoommateException("Email cannot be null or empty");
         }
@@ -60,11 +65,12 @@ public class RoommateServiceImpl implements RoommateService {
                 .orElseThrow(() -> new RoommateException("Roommate not found with id " + id));
         roommate.setEmail(email);
         log.info("Email updated successfully for roommate with Id: {}", id);
-        return roommateRepo.save(roommate);
+        roommateRepo.save(roommate);
+        return "Email updated successfully for roommate";
     }
 
     @Transactional
-    public Roommate updateRoommate(int roommateId, Roommate roommate) {
+    public String updateRoommate(int roommateId, Roommate roommate) {
         Roommate existingRoommate = roommateRepo.findById(roommateId)
                 .orElseThrow(() -> {
                     return new RoommateException("Roommate not found with id " + roommateId);
@@ -81,7 +87,9 @@ public class RoommateServiceImpl implements RoommateService {
         existingRoommate.setRoomNumber(roommate.getRoomNumber());
 
         log.info("Roommate details updated successfully for Id: {}",roommateId);
-        return roommateRepo.save(existingRoommate);
+        roommateRepo.save(existingRoommate);
+
+        return "Roommate details updated successfully";
     }
 
     @Override
@@ -122,12 +130,13 @@ public class RoommateServiceImpl implements RoommateService {
 
     @Override
     @Transactional
-    public Roommate updateDetails(int roommateId, UpdateDetails updateDetails) {
+    public RoommateDTO updateDetails(int roommateId, UpdateDetails updateDetails) {
         Roommate roommate = roommateRepo.findById(roommateId).orElseThrow(() -> new RoommateException("No Roommate found under this Id"));
         if (updateDetails.getUsername() != null && !updateDetails.getUsername().equals(roommate.getUsername())) {
             if (checkUsernameExists(updateDetails.getUsername())) {
                 throw new RoommateException("Username already exists");
             }
+            paymentRepo.updateUsername(roommate.getUsername(),updateDetails.getUsername());
             roommate.setUsername(updateDetails.getUsername());
         }
         if (updateDetails.getEmail() != null && !updateDetails.getEmail().equals(roommate.getEmail())) {
@@ -155,7 +164,8 @@ public class RoommateServiceImpl implements RoommateService {
             roommate.setCheckOutDate(updateDetails.getCheckOutDate());
         }
         log.info("Details updated successfully for roommate with Id: {}", roommateId);
-        return roommateRepo.save(roommate);
+        roommateRepo.save(roommate);
+        return modelMapper.map(roommate,RoommateDTO.class);
     }
 
     private boolean checkUsernameExists(String username) {
@@ -224,7 +234,7 @@ public class RoommateServiceImpl implements RoommateService {
     }
 
     @Override
-    public Page<Roommate> sortRoommates(Integer pageNumber, Integer pageSize, RentStatus rentStatus, String sortField, String sortOrder) {
+    public Page<RoommateDTO> sortRoommates(Integer pageNumber, Integer pageSize, RentStatus rentStatus, String sortField, String sortOrder) {
         Sort sort= sortOrder.equalsIgnoreCase("asc")?Sort.by(sortField).ascending():Sort.by(sortField).descending();
         Pageable pageable= PageRequest.of(pageNumber,pageSize,sort);
 
@@ -238,7 +248,7 @@ public class RoommateServiceImpl implements RoommateService {
             throw new RoommateException("No Roommates available");
         }
         log.info("Fetched {} roommates details", roommatePage.getTotalElements());
-        return roommatePage;
+        return roommatePage.map(roommate -> modelMapper.map(roommate,RoommateDTO.class));
     }
 
 }

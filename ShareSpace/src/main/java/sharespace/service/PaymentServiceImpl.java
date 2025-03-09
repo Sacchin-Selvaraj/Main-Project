@@ -172,18 +172,24 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public List<Payment> searchUsername(String username) {
+    public List<PaymentDTO> searchUsername(String username) {
         List<Payment> paymentList;
         if (username.length()<3){
             paymentList=paymentRepo.findAllByRoomNumber(username);
         }else {
-            paymentList = paymentRepo.findAllByUsername(username);
+            paymentList=paymentRepo.findAllByUsername(username);
         }
         if (paymentList.isEmpty()) {
             throw new PaymentException("No Payments available under - " + username);
         }
         log.info("Fetched {} payments for username: {}", paymentList.size(), username);
-        return paymentList;
+
+        return paymentList.stream().map(payment ->{
+            PaymentDTO paymentDTO=mapper.map(payment,PaymentDTO.class);
+            paymentDTO.setUsername(payment.getRoommate().getUsername());
+            paymentDTO.setRoomNumber(payment.getRoommate().getRoomNumber());
+            return paymentDTO;
+        }).toList();
     }
 
 }

@@ -12,6 +12,7 @@ import sharespace.model.AvailabilityCheck;
 import sharespace.model.Room;
 import sharespace.model.Roommate;
 import sharespace.password.PasswordUtils;
+import sharespace.payload.OwnerRoomDTO;
 import sharespace.payload.RoomDTO;
 import sharespace.payload.RoommateDTO;
 import sharespace.repository.RoomRepository;
@@ -94,12 +95,12 @@ class RoomServiceImplTest {
 
     @Test
     void getAllRoomDetails() {
-
+        OwnerRoomDTO ownerRoomDTO=new OwnerRoomDTO();
         when(roomRepo.findAll()).thenReturn(Collections.singletonList(room));
         when(modelMapper.map(room,RoomDTO.class)).thenReturn(roomDTO1);
+        when(modelMapper.map(room,OwnerRoomDTO.class)).thenReturn(ownerRoomDTO);
 
-
-        List<RoomDTO> roomList=roomService.getAllRoomDetails();
+        List<OwnerRoomDTO> roomList=roomService.getAllRoomDetails();
 
         assertEquals(1,roomList.size());
         verify(roomRepo,times(1)).findAll();
@@ -173,10 +174,10 @@ class RoomServiceImplTest {
         when(roomRepo.save(room)).thenReturn(room);
         when(modelMapper.map(roommate,RoommateDTO.class)).thenReturn(roommateDTO);
 
-        RoommateDTO roommateDTO1=roomService.bookRoom(1,roommate);
+        String response=roomService.bookRoom(1,roommate);
 
-        assertNotNull(roommateDTO1);
-        assertEquals("TestUser",roommateDTO1.getUsername());
+        assertNotNull(response);
+        assertEquals("Room booked successfully for roommate: " +roommate.getUsername(),response);
         verify(roomRepo,times(1)).findById(1);
         verify(roomRepo,times(1)).save(room);
         verify(passwordUtils,times(1)).encrypt(roommate.getPassword());

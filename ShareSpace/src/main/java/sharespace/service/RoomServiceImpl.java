@@ -10,6 +10,7 @@ import sharespace.exception.RoomException;
 import sharespace.exception.RoommateException;
 import sharespace.model.*;
 import sharespace.password.PasswordUtils;
+import sharespace.payload.OwnerRoomDTO;
 import sharespace.payload.RoomDTO;
 import sharespace.payload.RoommateDTO;
 import sharespace.repository.RoomRepository;
@@ -18,10 +19,7 @@ import sharespace.repository.RoommateRepository;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class RoomServiceImpl implements RoomService {
@@ -41,14 +39,29 @@ public class RoomServiceImpl implements RoomService {
     }
 
     @Override
-    public List<RoomDTO> getAllRoomDetails() {
+    public List<OwnerRoomDTO> getAllRoomDetails() {
         List<Room> roomList = roomRepo.findAll();
 
         if (roomList.isEmpty()) {
             throw new RoomException("No Rooms are Added in the System");
         }
         log.info("Successfully fetched {} rooms", roomList.size());
-        return roomList.stream().map(room -> mapper.map(room,RoomDTO.class)).toList();
+
+        List<OwnerRoomDTO> ownerRoomDTOS=roomList.stream().map(room -> {
+            OwnerRoomDTO ownerRoomDTO=mapper.map(room, OwnerRoomDTO.class);
+            List<Roommate> roommateList = room.getRoommateList();
+            if (!roommateList.isEmpty()) {
+                List<RoommateDTO> roommateDTOS = roommateList.stream()
+                        .map(roommate -> mapper.map(roommate, RoommateDTO.class))
+                        .toList();
+                ownerRoomDTO.setRoommateDTO(roommateDTOS);
+            } else {
+                ownerRoomDTO.setRoommateDTO(Collections.emptyList());
+            }
+            return ownerRoomDTO;
+        }).toList();
+
+        return ownerRoomDTOS;
     }
 
     @Override
@@ -83,7 +96,7 @@ public class RoomServiceImpl implements RoomService {
 
     @Override
     @Transactional
-    public RoommateDTO bookRoom(int roomId, Roommate roommate) {
+    public String bookRoom(int roomId, Roommate roommate) {
         Room room = roomRepo.findById(roomId).orElseThrow(() -> new RoomException("Mentioned Room ID is not available"));
 
         if (roommate.getCheckOutDate() != null && roommate.getCheckOutDate().isBefore(LocalDate.now())) {
@@ -124,7 +137,7 @@ public class RoomServiceImpl implements RoomService {
         roommateRepo.save(roommate);
         roomRepo.save(room);
         log.info("Room booked successfully for roommate: {}", roommate.getUsername());
-        return mapper.map(roommate, RoommateDTO.class);
+        return "Room booked successfully for roommate: "+roommate.getUsername();
 
     }
 

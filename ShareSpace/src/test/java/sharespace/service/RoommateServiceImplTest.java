@@ -10,7 +10,9 @@ import org.modelmapper.TypeMap;
 import sharespace.exception.RoommateException;
 import sharespace.model.*;
 import sharespace.password.PasswordUtils;
+import sharespace.payload.RoommateDTO;
 import sharespace.payload.VacateResponseDTO;
+import sharespace.repository.PaymentRepository;
 import sharespace.repository.RoomRepository;
 import sharespace.repository.RoommateRepository;
 import sharespace.repository.VacateRepository;
@@ -39,38 +41,52 @@ class RoommateServiceImplTest {
     private VacateRepository vacateRepo;
 
     @Mock
+    private PaymentRepository paymentRepo;
+
+    @Mock
     private ModelMapper modelMapper;
 
     @InjectMocks
     private RoommateServiceImpl roommateService;
 
+    private Roommate roommate1;
+    private Roommate roommate2;
+    private RoommateDTO roommateDTO;
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-    }
-
-
-    @Test
-    void getAllRoommates() {
-        Roommate roommate1=new Roommate();
+        roommate1=new Roommate();
         roommate1.setUsername("TestUser1");
         roommate1.setPassword("user1");
         roommate1.setEmail("test123@gmail.com");
         roommate1.setRentAmount(7000);
-        Roommate roommate2=new Roommate();
+        roommate2=new Roommate();
         roommate2.setUsername("TestUser2");
         roommate2.setPassword("user2");
         roommate2.setEmail("test1234@gmail.com");
         roommate2.setRentAmount(6000);
 
+        roommateDTO=new RoommateDTO();
+        roommateDTO.setUsername("TestUser3");
+        roommateDTO.setPassword("user3");
+        roommateDTO.setEmail("test12345@gmail.com");
+        roommateDTO.setRentAmount(5000);
+
+    }
+
+
+    @Test
+    void getAllRoommates() {
+
         List<Roommate> roommates= Arrays.asList(roommate1,roommate2);
         when(roommateRepo.findAll()).thenReturn(roommates);
+        when(modelMapper.map(roommate1,RoommateDTO.class)).thenReturn(roommateDTO);
 
-        List<Roommate> roommateList=roommateService.getAllRoommates();
+        List<RoommateDTO> roommateList=roommateService.getAllRoommates();
 
         assertEquals(2,roommateList.size());
-        assertEquals("TestUser1", roommateList.get(0).getUsername());
-        assertEquals("TestUser2", roommateList.get(1).getUsername());
+        assertEquals("TestUser3", roommateList.get(0).getUsername());
         verify(roommateRepo,times(1)).findAll();
 
     }
@@ -98,11 +114,11 @@ class RoommateServiceImplTest {
         when(roommateRepo.findById(1)).thenReturn(Optional.of(roommate1));
         when(roommateRepo.save(roommate1)).thenReturn(roommate1);
 
-        Roommate roommate=roommateService.updateEmail(1,roommate1.getEmail());
+        String response=roommateService.updateEmail(1,roommate1.getEmail());
 
-        assertEquals("test123@gmail.com",roommate.getEmail());
+        assertEquals("Email updated successfully for roommate",response);
         verify(roommateRepo,times(1)).findById(1);
-        verify(roommateRepo,times(1)).save(roommate);
+        verify(roommateRepo,times(1)).save(roommate1);
 
     }
     @Test
@@ -134,10 +150,9 @@ class RoommateServiceImplTest {
         when(roommateRepo.findById(id)).thenReturn(Optional.of(existingRoommate));
         when(roommateRepo.save(existingRoommate)).thenReturn(existingRoommate);
 
-        Roommate result = roommateService.updateRoommate(id, roommate);
+        String result = roommateService.updateRoommate(id, roommate);
 
-        assertEquals("TestUser", result.getUsername());
-        assertEquals("test123", result.getPassword());
+        assertEquals("Roommate details updated successfully", result);
         verify(roommateRepo, times(1)).findById(id);
         verify(roommateRepo, times(1)).save(existingRoommate);
 
@@ -265,12 +280,12 @@ class RoommateServiceImplTest {
         when(passwordUtils.encrypt("newPassword")).thenReturn("encryptedPassword");
         when(roommateRepo.save(roommate)).thenReturn(roommate);
 
-        Roommate result = roommateService.updateDetails(roommateId, updateDetails);
+
+        RoommateDTO result = roommateService.updateDetails(roommateId, updateDetails);
 
         assertEquals("newUsername", result.getUsername());
         assertEquals("newemail@example.com", result.getEmail());
         assertEquals("encryptedPassword", result.getPassword());
-        assertTrue(result.getWithFood());
         assertEquals(2000, result.getRentAmount());
         assertEquals(updateDetails.getCheckOutDate(), result.getCheckOutDate());
         verify(roommateRepo, times(1)).findById(roommateId);

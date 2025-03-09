@@ -77,9 +77,9 @@ public class PaymentController {
     }
 
     @GetMapping("/search/{username}")
-    public ResponseEntity<List<Payment>> searchUser(@PathVariable String username){
+    public ResponseEntity<List<PaymentDTO>> searchUser(@PathVariable String username){
         logger.info("Received request to search payments for username: {}", username);
-        List<Payment> payments = paymentService.searchUsername(username);
+        List<PaymentDTO> payments = paymentService.searchUsername(username);
         logger.info("Found {} payment records for username: {}", payments.size(), username);
         return new ResponseEntity<>(payments, HttpStatus.OK);
     }

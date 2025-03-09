@@ -47,7 +47,7 @@ public class Roommate {
     private String roomNumber;
     private LocalDate lastModifiedDate;
 
-    @OneToMany(mappedBy = "roommate", fetch = FetchType.LAZY,cascade = CascadeType.ALL,orphanRemoval = true)
+    @OneToMany(mappedBy = "roommate", fetch = FetchType.LAZY,cascade = {CascadeType.PERSIST,CascadeType.MERGE},orphanRemoval = true)
     @JsonManagedReference
     private List<Payment> paymentList;
 
@@ -62,7 +62,6 @@ public class Roommate {
     @OneToMany(mappedBy = "roommate", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<VacateRequest> vacateRequests = new ArrayList<>();
-
 
 }
 

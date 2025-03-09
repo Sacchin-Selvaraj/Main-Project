@@ -6,8 +6,8 @@ import org.slf4j.LoggerFactory;
 import sharespace.model.AvailabilityCheck;
 import sharespace.model.Room;
 import sharespace.model.Roommate;
+import sharespace.payload.OwnerRoomDTO;
 import sharespace.payload.RoomDTO;
-import sharespace.payload.RoommateDTO;
 import sharespace.service.RoomService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -29,9 +29,9 @@ public class RoomController {
     }
 
     @GetMapping("/all-rooms")
-    public ResponseEntity<List<RoomDTO>> getAllRoom(){
+    public ResponseEntity<List<OwnerRoomDTO>> getAllRoom(){
         log.info("Fetching all rooms");
-        List<RoomDTO> roomList=roomService.getAllRoomDetails();
+        List<OwnerRoomDTO> roomList=roomService.getAllRoomDetails();
         log.info("Fetched {} rooms", roomList.size());
         return new ResponseEntity<>(roomList, HttpStatus.OK);
     }
@@ -57,15 +57,11 @@ public class RoomController {
     }
 
     @PostMapping("/book/{roomId}")
-    public ResponseEntity<RoommateDTO> bookRoom(@PathVariable int roomId, @Valid @RequestBody Roommate roommate){
+    public ResponseEntity<String> bookRoom(@PathVariable int roomId, @Valid @RequestBody Roommate roommate){
         log.info("Booking room with Id: {}", roomId);
-        RoommateDTO roommateDTO=roomService.bookRoom(roomId, roommate);
-        if (roommateDTO != null) {
-            log.info("Room booked successfully with ID: {}", roomId);
-        } else {
-            log.error("Failed to book room with ID: {}", roomId);
-        }
-        return new ResponseEntity<>(roommateDTO,HttpStatus.OK);
+        String response=roomService.bookRoom(roomId, roommate);
+        log.info("Room booked successfully with ID: {}", roomId);
+        return new ResponseEntity<>(response,HttpStatus.OK);
     }
 
     @PostMapping("/add-room")

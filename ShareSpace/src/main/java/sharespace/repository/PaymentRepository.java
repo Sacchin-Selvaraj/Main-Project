@@ -2,6 +2,7 @@ package sharespace.repository;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.repository.query.Param;
 import sharespace.model.Payment;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -25,4 +26,8 @@ public interface PaymentRepository extends JpaRepository<Payment,Integer> {
     List<Payment> findAllByRoomNumber(String username);
 
     List<Payment> findAllByUsername(String username);
+
+    @Modifying
+    @Query("UPDATE Payment SET username = :newUsername WHERE username= :oldUsername")
+    void updateUsername(@Param("oldUsername") String oldUsername, @Param("newUsername") String newUsername);
 }

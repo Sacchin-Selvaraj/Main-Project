@@ -1,12 +1,10 @@
 package sharespace.payload;
 
-import sharespace.model.ReferralDetails;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.util.List;
 
 
 @Data
@@ -27,7 +25,4 @@ public class RoommateDTO {
     private String referralId;
     private int referCount;
     private String roomNumber;
-    private List<ReferralDetails> referralDetailsList;
-
-
 }

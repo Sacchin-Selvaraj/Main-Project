@@ -20,5 +20,5 @@ public interface PaymentService {
 
     Page<PaymentDTO> sortPayments(Integer page, Integer limit, LocalDate paymentDate, String sortField, String sortOrder);
 
-    List<Payment> searchUsername(String username);
+    List<PaymentDTO> searchUsername(String username);
 }

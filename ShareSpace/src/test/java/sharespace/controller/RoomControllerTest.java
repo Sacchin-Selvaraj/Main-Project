@@ -11,11 +11,13 @@ import org.springframework.http.ResponseEntity;
 import sharespace.model.AvailabilityCheck;
 import sharespace.model.Room;
 import sharespace.model.Roommate;
+import sharespace.payload.OwnerRoomDTO;
 import sharespace.payload.RoomDTO;
 import sharespace.payload.RoommateDTO;
 import sharespace.service.RoomService;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -59,13 +61,14 @@ class RoomControllerTest {
 
     @Test
     void getAllRoom() {
-        List<RoomDTO> roomList= Arrays.asList(roomDTO1,roomDTO2);
+        OwnerRoomDTO ownerRoomDTO=new OwnerRoomDTO();
+        List<OwnerRoomDTO> roomList= Collections.singletonList(ownerRoomDTO);
         when(roomService.getAllRoomDetails()).thenReturn(roomList);
 
-        ResponseEntity<List<RoomDTO>> response=roomController.getAllRoom();
+        ResponseEntity<List<OwnerRoomDTO>> response=roomController.getAllRoom();
 
         assertEquals(HttpStatus.OK,response.getStatusCode());
-        assertEquals(2,response.getBody().size());
+        assertEquals(1,response.getBody().size());
         verify(roomService,times(1)).getAllRoomDetails();
 
     }
@@ -106,17 +109,14 @@ class RoomControllerTest {
         Roommate roommate = new Roommate();
         roommate.setRoommateId(1);
         roommate.setUsername("user1");
+        String message="Room booked successfully for roommate ";
 
-        RoommateDTO roommateDTO = new RoommateDTO();
-        roommateDTO.setRoommateId(1);
-        roommateDTO.setUsername("user1");
+        when(roomService.bookRoom(roomId, roommate)).thenReturn(message);
 
-        when(roomService.bookRoom(roomId, roommate)).thenReturn(roommateDTO);
-
-        ResponseEntity<RoommateDTO> response = roomController.bookRoom(roomId, roommate);
+        ResponseEntity<String> response = roomController.bookRoom(roomId, roommate);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("user1", response.getBody().getUsername());
+        assertEquals("Room booked successfully for roommate ", response.getBody() );
         verify(roomService, times(1)).bookRoom(roomId, roommate);
 
     }
