@@ -116,14 +116,20 @@ public class NotificationServiceImpl implements NotificationService {
         if (roommates.isEmpty()) {
             throw new RoommateException("No Roommates details present");
         }
-        for (Roommate roommate : roommates) {
-            sendMailToRoommate(roommate);
-            log.info("Current Thread in 1st method : {}",Thread.currentThread().getName());
+        try {
+            for (Roommate roommate : roommates) {
+                sendMailToRoommate(roommate);
+                log.info("Current Thread in 1st method : {}", Thread.currentThread().getName());
+            }
+        } catch (RuntimeException e) {
+            log.error("Failed to send Email to roommates - Error Message : {}",e.getMessage());
+            throw new NotificationException("Failed to send email notification");
         }
-        MailResponse mailResponse = new MailResponse();
-        mailResponse.setMessage("Mail sent successfully");
-        mailResponse.setStatus(Boolean.TRUE);
-        return CompletableFuture.completedFuture(mailResponse);
+            MailResponse mailResponse = new MailResponse();
+            mailResponse.setMessage("Mail sent successfully");
+            mailResponse.setStatus(Boolean.TRUE);
+            return CompletableFuture.completedFuture(mailResponse);
+
     }
 
     private void sendMail(String toMail, String subject, Map<String, Object> model) {
